@@ -513,10 +513,7 @@ impl geng::App for Game {
             framebuffer,
             &format!(
                 "ENEMIES: {}",
-                self.players
-                    .iter()
-                    .filter(|p| p.owner_id.unwrap() != 1)
-                    .count()
+                self.players.iter().filter(|p| p.team_id != 0).count()
             ),
             vec2(0.0, 0.0),
             32.0,
