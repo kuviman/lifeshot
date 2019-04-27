@@ -53,6 +53,7 @@ impl Entity {
     }
     fn update(&mut self, delta_time: f32) {
         self.pos += self.vel * delta_time;
+        self.pos = Game::normalize(self.pos);
     }
     fn collide(a: &mut Self, b: &mut Self) {
         let penetration = (a.size + b.size) - (a.pos - b.pos).len();
@@ -159,8 +160,8 @@ impl Player {
             let projectile = self.projectile.as_mut().unwrap();
             let e = &mut self.entity;
 
-            projectile.pos = e.pos + (target - e.pos).clamp(e.size);
-            projectile.vel = (target - e.pos).normalize() * Self::PROJECTILE_SPEED;
+            projectile.pos = e.pos + Game::delta_pos(e.pos, target).clamp(e.size);
+            projectile.vel = Game::delta_pos(e.pos, target).normalize() * Self::PROJECTILE_SPEED;
             projectile.add_mass(Self::PROJECTILE_MASS_GAIN_SPEED * delta_time);
             e.add_mass(-Self::PROJECTILE_COST_SPEED * delta_time);
             None
@@ -260,6 +261,27 @@ impl Game {
 
     const PROJECTILE_DEATH_SPEED: f32 = 0.2;
     const PLAYER_DEATH_SPEED: f32 = 1.0 / 60.0;
+
+    fn delta_pos(a: Vec2<f32>, b: Vec2<f32>) -> Vec2<f32> {
+        let dv = b - a;
+        Self::normalize(dv)
+    }
+
+    fn normalize(mut v: Vec2<f32>) -> Vec2<f32> {
+        while v.x > Self::WORLD_SIZE {
+            v.x -= 2.0 * Self::WORLD_SIZE;
+        }
+        while v.y > Self::WORLD_SIZE {
+            v.y -= 2.0 * Self::WORLD_SIZE;
+        }
+        while v.x < -Self::WORLD_SIZE {
+            v.x += 2.0 * Self::WORLD_SIZE;
+        }
+        while v.y < -Self::WORLD_SIZE {
+            v.y += 2.0 * Self::WORLD_SIZE;
+        }
+        v
+    }
 
     fn new(context: &Rc<geng::Context>) -> Self {
         let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
@@ -390,19 +412,24 @@ impl geng::App for Game {
                 e.draw(particles);
             }
         }
-        ugli::draw(
-            framebuffer,
-            &self.particle_program,
-            ugli::DrawMode::TriangleFan,
-            ugli::instanced(&self.quad_geometry, &self.particle_instances),
-            ugli::uniforms! {
-                u_view_matrix: view_matrix,
-            },
-            ugli::DrawParameters {
-                blend_mode: Some(default()),
-                ..default()
-            },
-        );
+        for i in -1..=1 {
+            for j in -1..=1 {
+                ugli::draw(
+                    framebuffer,
+                    &self.particle_program,
+                    ugli::DrawMode::TriangleFan,
+                    ugli::instanced(&self.quad_geometry, &self.particle_instances),
+                    ugli::uniforms! {
+                        u_view_matrix: view_matrix,
+                        u_world_offset: vec2(i as f32 * Self::WORLD_SIZE, j as f32 * Self::WORLD_SIZE) * 2.0,
+                    },
+                    ugli::DrawParameters {
+                        blend_mode: Some(default()),
+                        ..default()
+                    },
+                );
+            }
+        }
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
