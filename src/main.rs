@@ -405,9 +405,6 @@ impl geng::App for Game {
                     e.hit(player);
                 }
             }
-            for f in &mut self.food {
-                e.hit(f);
-            }
         }
         for i in 0..self.projectiles.len() {
             let (head, tail) = self.projectiles.split_at_mut(i);
