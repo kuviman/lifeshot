@@ -186,17 +186,24 @@ impl Controller for KeyboardController {
     }
 }
 
+struct EmptyController;
+
+impl Controller for EmptyController {
+    fn act(&mut self) -> Action {
+        default()
+    }
+}
+
 impl Game {
     fn new(context: &Rc<geng::Context>) -> Self {
         let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
         let keyboard_controller = KeyboardController::new(context, &mouse_pos);
         Self {
             context: context.clone(),
-            players: vec![Player::new(
-                vec2(0.0, 0.0),
-                Color::WHITE,
-                keyboard_controller,
-            )],
+            players: vec![
+                Player::new(vec2(0.0, 0.0), Color::WHITE, keyboard_controller),
+                Player::new(vec2(10.0, 0.0), Color::RED, EmptyController),
+            ],
             projectiles: Vec::new(),
             quad_geometry: ugli::VertexBuffer::new_static(
                 context.ugli_context(),
