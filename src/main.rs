@@ -73,6 +73,7 @@ struct Player {
 impl Player {
     const INITIAL_SIZE: f32 = 1.0;
     const MAX_SPEED: f32 = 5.0;
+    const MAX_AIMING_SPEED: f32 = 1.0;
     const ACCELERATION: f32 = 10.0;
     const PROJECTILE_SPEED: f32 = 15.0;
 
@@ -91,6 +92,9 @@ impl Player {
     fn update(&mut self, delta_time: f32) -> Option<Entity> {
         let mut action = self.controller.act();
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
+        if action.shoot.is_some() {
+            action.target_vel = action.target_vel.clamp(Self::MAX_AIMING_SPEED);
+        }
         let delta_vel = action.target_vel - self.vel;
         self.vel += delta_vel.clamp(Self::ACCELERATION * delta_time);
         self.entity.update(delta_time);
