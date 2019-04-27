@@ -1,5 +1,9 @@
 use geng::prelude::*;
 
+mod bot;
+
+use bot::BotController;
+
 #[derive(ugli::Vertex)]
 struct QuadVertex {
     a_pos: Vec2<f32>,
@@ -83,6 +87,7 @@ impl Entity {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
 struct Action {
     target_vel: Vec2<f32>,
     shoot: Option<Vec2<f32>>,
@@ -98,13 +103,14 @@ impl Default for Action {
 }
 
 trait Controller {
-    fn act(&mut self) -> Action;
+    fn act(&mut self, self_id: usize, game: &Game) -> Action;
 }
 
 struct Player {
     entity: Entity,
+    controller: RefCell<Box<dyn Controller>>,
     projectile: Option<Entity>,
-    controller: Box<dyn Controller>,
+    action: Cell<Action>,
 }
 
 impl Player {
@@ -124,12 +130,13 @@ impl Player {
                 vel: vec2(0.0, 0.0),
                 size: Self::INITIAL_SIZE,
             },
+            controller: RefCell::new(Box::new(controller)),
             projectile: None,
-            controller: Box::new(controller),
+            action: Cell::new(default()),
         }
     }
     fn update(&mut self, delta_time: f32) -> Option<Entity> {
-        let mut action = self.controller.act();
+        let mut action = self.action.get();
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
         if action.shoot.is_some() {
             action.target_vel = action.target_vel.clamp(Self::MAX_AIMING_SPEED);
@@ -167,6 +174,14 @@ impl Player {
             e.draw(particles);
         }
     }
+
+    fn act(&self, game: &Game) {
+        self.action.set(
+            self.controller
+                .borrow_mut()
+                .act(self.owner_id.unwrap(), game),
+        );
+    }
 }
 
 impl Deref for Player {
@@ -197,7 +212,7 @@ impl KeyboardController {
 }
 
 impl Controller for KeyboardController {
-    fn act(&mut self) -> Action {
+    fn act(&mut self, _: usize, _: &Game) -> Action {
         let mut target_vel = vec2(0.0, 0.0);
         if self.context.window().is_key_pressed(geng::Key::W) {
             target_vel.y += 1.0;
@@ -229,7 +244,7 @@ impl Controller for KeyboardController {
 struct EmptyController;
 
 impl Controller for EmptyController {
-    fn act(&mut self) -> Action {
+    fn act(&mut self, _: usize, _: &Game) -> Action {
         default()
     }
 }
@@ -246,10 +261,11 @@ impl Game {
         let keyboard_controller = KeyboardController::new(context, &mouse_pos);
         Self {
             context: context.clone(),
-            players: vec![
-                Player::new(vec2(0.0, 0.0), Color::WHITE, keyboard_controller),
-                Player::new(vec2(10.0, 0.0), Color::RED, EmptyController),
-            ],
+            players: vec![Player::new(
+                vec2(0.0, 0.0),
+                Color::WHITE,
+                keyboard_controller,
+            )],
             food: Vec::new(),
             next_food: 0.0,
             projectiles: Vec::new(),
@@ -282,6 +298,9 @@ impl Game {
 
 impl geng::App for Game {
     fn update(&mut self, delta_time: f64) {
+        for player in &self.players {
+            player.act(self);
+        }
         let delta_time = delta_time as f32;
         for player in &mut self.players {
             if let Some(e) = player.update(delta_time) {
@@ -376,6 +395,23 @@ impl geng::App for Game {
                 ..default()
             },
         );
+    }
+    fn handle_event(&mut self, event: geng::Event) {
+        match event {
+            geng::Event::KeyDown {
+                key: geng::Key::Space,
+            } => {
+                self.players.push(Player::new(
+                    vec2(
+                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                    ),
+                    Color::RED,
+                    BotController,
+                ));
+            }
+            _ => {}
+        }
     }
 }
 
