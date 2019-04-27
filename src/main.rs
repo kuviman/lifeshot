@@ -41,6 +41,9 @@ impl Entity {
         let mass = self.size * self.size + delta;
         self.size = mass.max(0.0).sqrt();
     }
+    fn update(&mut self, delta_time: f32) {
+        self.pos += self.vel * delta_time;
+    }
 }
 
 struct Action {
@@ -90,8 +93,7 @@ impl Player {
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
         let delta_vel = action.target_vel - self.vel;
         self.vel += delta_vel.clamp(Self::ACCELERATION * delta_time);
-        let delta_pos = self.vel * delta_time;
-        self.pos += delta_pos;
+        self.entity.update(delta_time);
         if let Some(target) = action.shoot {
             if self.projectile.is_none() {
                 self.projectile = Some(Entity {
@@ -222,7 +224,7 @@ impl geng::App for Game {
         }
         self.players.retain(|e| e.size > 0.0);
         for e in &mut self.projectiles {
-            e.pos += e.vel * delta_time;
+            e.update(delta_time);
         }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
