@@ -27,6 +27,8 @@ struct Game {
     particle_instances: ugli::VertexBuffer<ParticleInstance>,
     particle_program: ugli::Program,
     mouse_pos: Rc<Cell<Vec2<f32>>>,
+    next_wave_timer: f32,
+    next_wave: usize,
 }
 
 struct Entity {
@@ -260,6 +262,8 @@ impl Game {
     const FOOD_SIZE: Range<f32> = 0.1..0.3;
     const FOOD_SPAWN: Range<f32> = 0.05..0.1;
 
+    const TIME_BETWEEN_WAVES: f32 = 120.0;
+
     const WORLD_SIZE: f32 = 50.0;
 
     const PROJECTILE_DEATH_SPEED: f32 = 0.2;
@@ -323,7 +327,20 @@ impl Game {
                 .unwrap(),
             mouse_pos,
             camera_pos: vec2(0.0, 0.0),
+            next_wave_timer: 0.0,
+            next_wave: 1,
         }
+    }
+
+    fn spawn_enemy(&mut self) {
+        self.players.push(Player::new(
+            vec2(
+                global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+            ),
+            Color::RED,
+            BotController,
+        ));
     }
 }
 
@@ -403,6 +420,24 @@ impl geng::App for Game {
             }
         }
         self.food.retain(|e| e.size > 0.0);
+
+        if self
+            .players
+            .iter()
+            .filter(|p| p.owner_id.unwrap() != 1)
+            .count()
+            == 0
+        {
+            self.next_wave_timer = 0.0;
+        }
+        self.next_wave_timer -= delta_time;
+        if self.next_wave_timer < 0.0 {
+            self.next_wave_timer = Self::TIME_BETWEEN_WAVES;
+            for _ in 0..self.next_wave {
+                self.spawn_enemy();
+            }
+            self.next_wave += 1;
+        }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
         for player in &self.players {
@@ -459,18 +494,6 @@ impl geng::App for Game {
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
-            geng::Event::KeyDown {
-                key: geng::Key::Space,
-            } => {
-                self.players.push(Player::new(
-                    vec2(
-                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                    ),
-                    Color::RED,
-                    BotController,
-                ));
-            }
             _ => {}
         }
     }
