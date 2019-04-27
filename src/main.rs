@@ -332,6 +332,9 @@ impl geng::App for Game {
                     e.hit(player);
                 }
             }
+            for f in &mut self.food {
+                e.hit(f);
+            }
         }
         self.next_food -= delta_time;
         while self.next_food < 0.0 {
