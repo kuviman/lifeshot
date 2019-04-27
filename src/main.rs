@@ -564,7 +564,7 @@ impl geng::App for Game {
                 self.next_wave,
                 f32::floor(self.next_wave_timer / 2.0),
             ),
-            vec2(0.0, 0.0),
+            vec2(32.0, 32.0),
             32.0,
             Color::WHITE,
         );
