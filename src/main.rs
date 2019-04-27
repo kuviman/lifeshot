@@ -505,6 +505,23 @@ impl geng::App for Game {
             for e in &self.projectiles {
                 e.draw(particles);
             }
+            for player in &self.players {
+                if player.team_id != 0 {
+                    let dv = Self::delta_pos(self.camera_pos, player.pos);
+                    if dv.x.abs() > Self::CAMERA_FOV * framebuffer_size.x / framebuffer_size.y
+                        || dv.y.abs() > Self::CAMERA_FOV
+                    {
+                        let mut color = player.color;
+                        color.a = 0.2;
+                        particles.push(ParticleInstance {
+                            i_pos: self.camera_pos
+                                + dv.normalize() * (Self::CAMERA_FOV - player.size + 1.0),
+                            i_color: color,
+                            i_size: player.size,
+                        });
+                    }
+                }
+            }
         }
         for i in -1..=1 {
             for j in -1..=1 {
@@ -524,6 +541,7 @@ impl geng::App for Game {
                 );
             }
         }
+
         self.context.default_font().draw(
             framebuffer,
             &format!(
