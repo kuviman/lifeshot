@@ -34,14 +34,11 @@ impl Controller for BotController {
             target_vel: closest_food.map(|f| f.pos).unwrap_or(vec2(0.0, 0.0)) - me.pos,
             shoot: closest_enemy.and_then(|e| match me.projectile {
                 Some(ref p) => {
-                    if p.size
-                        - Game::PROJECTILE_DEATH_SPEED * (e.pos - p.pos).len()
-                            / Player::PROJECTILE_SPEED
-                        > Self::SHOT_HIT_SIZE
-                    {
+                    let hit_time = (e.pos - p.pos).len() / Player::PROJECTILE_SPEED;
+                    if p.size - Game::PROJECTILE_DEATH_SPEED * hit_time > Self::SHOT_HIT_SIZE {
                         None
                     } else {
-                        Some(e.pos)
+                        Some(e.pos + e.vel * hit_time)
                     }
                 }
                 _ => {
