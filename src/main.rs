@@ -496,6 +496,19 @@ impl geng::App for Game {
         {
             let particles: &mut Vec<_> = &mut self.particle_instances;
             particles.clear();
+
+            {
+                let dv = (self.mouse_pos.get() - self.camera_pos).normalize() * Self::CAMERA_FOV;
+                const N: usize = 10;
+                for i in 1..=N {
+                    particles.push(ParticleInstance {
+                        i_pos: self.camera_pos + dv * i as f32 / N as f32,
+                        i_color: Color::rgba(0.5, 0.5, 1.0, 0.2),
+                        i_size: 0.2,
+                    });
+                }
+            }
+
             for f in &self.food {
                 f.draw(particles);
             }
