@@ -117,7 +117,7 @@ impl Player {
     const INITIAL_SIZE: f32 = 1.0;
     const MAX_SPEED: f32 = 5.0;
     const MAX_AIMING_SPEED: f32 = 1.0;
-    const ACCELERATION: f32 = 10.0;
+    const ACCELERATION: f32 = 15.0;
     const PROJECTILE_SPEED: f32 = 15.0;
     const PROJECTILE_MASS_GAIN_SPEED: f32 = 0.3;
     const PROJECTILE_COST_SPEED: f32 = 0.1;
