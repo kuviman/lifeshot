@@ -389,7 +389,7 @@ impl geng::App for Game {
         for player in &self.players {
             player.act(self);
         }
-        let delta_time = delta_time as f32 * 1.5;
+        let delta_time = delta_time as f32;
         for player in &mut self.players {
             player.size -= Self::PLAYER_DEATH_SPEED * delta_time;
             if let Some(e) = player.update(delta_time) {
