@@ -498,8 +498,9 @@ impl geng::App for Game {
             particles.clear();
 
             {
-                let dv = (self.mouse_pos.get() - self.camera_pos).normalize() * Self::CAMERA_FOV;
-                const N: usize = 10;
+                let dv =
+                    (self.mouse_pos.get() - self.camera_pos).normalize() * Self::CAMERA_FOV * 2.0;
+                const N: usize = 20;
                 for i in 1..=N {
                     particles.push(ParticleInstance {
                         i_pos: self.camera_pos + dv * i as f32 / N as f32,
