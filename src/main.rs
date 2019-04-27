@@ -37,6 +37,10 @@ impl Entity {
             i_color: self.color,
         }
     }
+    fn add_mass(&mut self, delta: f32) {
+        let mass = self.size * self.size + delta;
+        self.size = mass.max(0.0).sqrt();
+    }
 }
 
 struct Action {
@@ -102,9 +106,9 @@ impl Player {
 
             projectile.pos = e.pos + (target - e.pos).clamp(e.size);
             projectile.vel = (target - e.pos).normalize() * Self::PROJECTILE_SPEED;
-            let delta_size = delta_time / 3.0;
-            projectile.size += delta_size;
-            e.size -= delta_size;
+            let delta_mass = delta_time / 3.0;
+            projectile.add_mass(delta_mass);
+            e.add_mass(-delta_mass);
             None
         } else {
             self.projectile.take()
