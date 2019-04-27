@@ -119,6 +119,8 @@ impl Player {
     const MAX_AIMING_SPEED: f32 = 1.0;
     const ACCELERATION: f32 = 10.0;
     const PROJECTILE_SPEED: f32 = 15.0;
+    const PROJECTILE_MASS_GAIN_SPEED: f32 = 0.3;
+    const PROJECTILE_COST_SPEED: f32 = 0.1;
 
     fn new<T: Controller + 'static>(pos: Vec2<f32>, color: Color<f32>, controller: T) -> Self {
         static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
@@ -159,9 +161,8 @@ impl Player {
 
             projectile.pos = e.pos + (target - e.pos).clamp(e.size);
             projectile.vel = (target - e.pos).normalize() * Self::PROJECTILE_SPEED;
-            let delta_mass = delta_time / 3.0;
-            projectile.add_mass(delta_mass);
-            e.add_mass(-delta_mass);
+            projectile.add_mass(Self::PROJECTILE_MASS_GAIN_SPEED * delta_time);
+            e.add_mass(-Self::PROJECTILE_COST_SPEED * delta_time);
             None
         } else {
             self.projectile.take()
