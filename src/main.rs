@@ -76,13 +76,13 @@ impl Entity {
             target.add_mass(-delta_mass);
         }
     }
-    fn consume(&mut self, target: &mut Self) {
+    fn consume(&mut self, target: &mut Self, k: f32) {
         let penetration = (self.size + target.size) - (self.pos - target.pos).len();
         if penetration > 0.0 {
             let prev_mass = target.mass();
             target.size = (target.size - penetration).max(0.0);
             let delta_mass = prev_mass - target.mass();
-            self.add_mass(delta_mass);
+            self.add_mass(delta_mass * k);
         }
     }
 }
@@ -251,7 +251,8 @@ impl Controller for EmptyController {
 }
 
 impl Game {
-    const MAX_FOOD: usize = 50;
+    const MAX_FOOD: usize = 10;
+    const FOOD_K: f32 = 5.0;
     const FOOD_SIZE: Range<f32> = 0.1..0.3;
     const FOOD_SPAWN: Range<f32> = 0.05..0.1;
 
@@ -353,7 +354,7 @@ impl geng::App for Game {
         }
         for f in &mut self.food {
             for player in &mut self.players {
-                player.consume(f);
+                player.consume(f, Self::FOOD_K);
             }
         }
         self.food.retain(|e| e.size > 0.0);
