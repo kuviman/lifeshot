@@ -23,6 +23,7 @@ struct Game {
 }
 
 struct Entity {
+    owner_id: Option<usize>,
     color: Color<f32>,
     pos: Vec2<f32>,
     vel: Vec2<f32>,
@@ -60,6 +61,15 @@ impl Entity {
             b.pos += n * penetration * kb;
         }
     }
+    fn hit(&mut self, target: &mut Self) {
+        let penetration = (self.size + target.size) - (self.pos - target.pos).len();
+        if penetration > 0.0 {
+            let prev_mass = self.mass();
+            self.size = (self.size - penetration).max(0.0);
+            let delta_mass = prev_mass - self.mass();
+            target.add_mass(-delta_mass);
+        }
+    }
 }
 
 struct Action {
@@ -94,8 +104,10 @@ impl Player {
     const PROJECTILE_SPEED: f32 = 15.0;
 
     fn new<T: Controller + 'static>(pos: Vec2<f32>, color: Color<f32>, controller: T) -> Self {
+        static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
         Self {
             entity: Entity {
+                owner_id: Some({ NEXT_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed) }),
                 color,
                 pos,
                 vel: vec2(0.0, 0.0),
@@ -117,6 +129,7 @@ impl Player {
         if let Some(target) = action.shoot {
             if self.projectile.is_none() {
                 self.projectile = Some(Entity {
+                    owner_id: self.owner_id,
                     color: self.color,
                     size: 0.0,
                     pos: vec2(0.0, 0.0),
@@ -265,6 +278,13 @@ impl geng::App for Game {
             let cur = &mut tail[0];
             for prev in head {
                 Entity::collide(prev, cur);
+            }
+        }
+        for e in &mut self.projectiles {
+            for player in &mut self.players {
+                if e.owner_id != player.owner_id {
+                    e.hit(player);
+                }
             }
         }
     }
