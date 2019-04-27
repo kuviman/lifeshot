@@ -362,6 +362,13 @@ impl geng::App for Game {
                 e.hit(f);
             }
         }
+        for i in 0..self.projectiles.len() {
+            let (head, tail) = self.projectiles.split_at_mut(i);
+            let cur = &mut tail[0];
+            for prev in head {
+                cur.hit(prev);
+            }
+        }
         self.next_food -= delta_time;
         while self.next_food < 0.0 {
             self.next_food += global_rng().gen_range(Self::FOOD_SPAWN.start, Self::FOOD_SPAWN.end);
