@@ -4,6 +4,15 @@ mod bot;
 
 use bot::BotController;
 
+fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
+    Color::rgba(
+        (a.r + b.r) / 2.0,
+        (a.g + b.g) / 2.0,
+        (a.b + b.b) / 2.0,
+        (a.a + b.a) / 2.0,
+    )
+}
+
 #[derive(ugli::Vertex)]
 struct QuadVertex {
     a_pos: Vec2<f32>,
@@ -164,7 +173,7 @@ impl Player {
             if self.projectile.is_none() {
                 self.projectile = Some(Entity {
                     owner_id: self.owner_id,
-                    color: self.color,
+                    color: mix(self.color, Color::WHITE),
                     size: 0.0,
                     pos: vec2(0.0, 0.0),
                     vel: vec2(0.0, 0.0),
@@ -184,10 +193,19 @@ impl Player {
     }
 
     fn draw(&self, particles: &mut Vec<ParticleInstance>) {
-        self.entity.draw(particles);
         if let Some(e) = self.projectile.as_ref() {
             e.draw(particles);
         }
+        particles.push(ParticleInstance {
+            i_pos: self.pos,
+            i_size: self.size,
+            i_color: mix(self.color, Color::BLACK),
+        });
+        particles.push(ParticleInstance {
+            i_pos: self.pos,
+            i_size: self.size * 0.9,
+            i_color: self.color,
+        });
     }
 
     fn act(&self, game: &Game) {
@@ -303,7 +321,7 @@ impl Game {
     fn reset(&mut self) {
         self.players = vec![Player::new(
             vec2(0.0, 0.0),
-            Color::WHITE,
+            Color::BLUE,
             KeyboardController::new(&self.context, &self.mouse_pos),
             0,
         )];
