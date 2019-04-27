@@ -256,6 +256,9 @@ impl Game {
 
     const WORLD_SIZE: f32 = 10.0;
 
+    const PROJECTILE_DEATH_SPEED: f32 = 0.4;
+    const PLAYER_DEATH_SPEED: f32 = 1.0 / 60.0;
+
     fn new(context: &Rc<geng::Context>) -> Self {
         let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
         let keyboard_controller = KeyboardController::new(context, &mouse_pos);
@@ -303,17 +306,17 @@ impl geng::App for Game {
         }
         let delta_time = delta_time as f32;
         for player in &mut self.players {
+            player.size -= Self::PLAYER_DEATH_SPEED * delta_time;
             if let Some(e) = player.update(delta_time) {
                 self.projectiles.push(e);
             }
         }
         self.players.retain(|e| e.size > 0.0);
         for e in &mut self.projectiles {
+            e.size -= Self::PROJECTILE_DEATH_SPEED * delta_time;
             e.update(delta_time);
         }
-        self.projectiles.retain(|e| {
-            e.size > 0.0 && e.pos.x.abs() < Self::WORLD_SIZE && e.pos.y.abs() < Self::WORLD_SIZE
-        });
+        self.projectiles.retain(|e| e.size > 0.0);
         for i in 0..self.players.len() {
             let (head, tail) = self.players.split_at_mut(i);
             let cur = &mut tail[0];
