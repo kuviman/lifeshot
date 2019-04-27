@@ -446,7 +446,7 @@ impl geng::App for Game {
             .count()
             == 0
         {
-            self.next_wave_timer = 10.0;
+            self.next_wave_timer = self.next_wave_timer.min(10.0);
         }
         self.next_wave_timer -= delta_time;
         if self.next_wave_timer < 0.0 {
