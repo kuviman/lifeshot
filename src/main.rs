@@ -255,7 +255,7 @@ impl Controller for EmptyController {
 impl Game {
     const CAMERA_FOV: f32 = 15.0;
 
-    const MAX_FOOD: usize = 80;
+    const MAX_FOOD: usize = 50;
     const FOOD_K: f32 = 5.0;
     const FOOD_SIZE: Range<f32> = 0.1..0.3;
     const FOOD_SPAWN: Range<f32> = 0.05..0.1;
