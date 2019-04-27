@@ -239,6 +239,8 @@ impl Game {
     const FOOD_SIZE: Range<f32> = 0.1..0.3;
     const FOOD_SPAWN: Range<f32> = 0.5..1.0;
 
+    const WORLD_SIZE: f32 = 10.0;
+
     fn new(context: &Rc<geng::Context>) -> Self {
         let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
         let keyboard_controller = KeyboardController::new(context, &mouse_pos);
@@ -290,6 +292,9 @@ impl geng::App for Game {
         for e in &mut self.projectiles {
             e.update(delta_time);
         }
+        self.projectiles.retain(|e| {
+            e.size > 0.0 && e.pos.x.abs() < Self::WORLD_SIZE && e.pos.y.abs() < Self::WORLD_SIZE
+        });
         for i in 0..self.players.len() {
             let (head, tail) = self.players.split_at_mut(i);
             let cur = &mut tail[0];
@@ -312,8 +317,8 @@ impl geng::App for Game {
                     owner_id: None,
                     color: Color::GREEN,
                     pos: vec2(
-                        global_rng().gen_range(-10.0, 10.0),
-                        global_rng().gen_range(-10.0, 10.0),
+                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
                     ),
                     vel: vec2(0.0, 0.0),
                     size: global_rng().gen_range(Self::FOOD_SIZE.start, Self::FOOD_SIZE.end),
@@ -328,6 +333,7 @@ impl geng::App for Game {
                 player.consume(f);
             }
         }
+        self.food.retain(|e| e.size > 0.0);
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
         let framebuffer_size = framebuffer.get_size().map(|x| x as f32);
