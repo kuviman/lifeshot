@@ -443,7 +443,9 @@ impl geng::App for Game {
                         global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
                     ),
                     vel: vec2(0.0, 0.0),
-                    size: global_rng().gen_range(Self::FOOD_SIZE.start, Self::FOOD_SIZE.end),
+                    size: Self::FOOD_SIZE.start
+                        + global_rng().gen_range::<f32>(0.0, 1.0).powf(4.0)
+                            * (Self::FOOD_SIZE.end - Self::FOOD_SIZE.start),
                 });
             }
         }
