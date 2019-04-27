@@ -533,8 +533,9 @@ impl geng::App for Game {
         self.context.default_font().draw(
             framebuffer,
             &format!(
-                "ENEMIES: {}, next wave in {} secs",
+                "ENEMIES: {}, wave #{} in {} secs",
                 self.players.iter().filter(|p| p.team_id != 0).count(),
+                self.next_wave,
                 f32::floor(self.next_wave_timer / 2.0),
             ),
             vec2(0.0, 0.0),
