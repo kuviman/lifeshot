@@ -60,6 +60,7 @@ impl Entity {
     }
     fn collide(a: &mut Self, b: &mut Self) {
         let penetration = (a.size + b.size) - Game::normalize(a.pos - b.pos).len();
+        let penetration = penetration.min(min(a.size, b.size));
         let n = Game::normalize(b.pos - a.pos).normalize();
         if penetration > 0.0 {
             let ka = 1.0 / a.mass();
@@ -73,6 +74,7 @@ impl Entity {
     }
     fn hit(&mut self, target: &mut Self) {
         let penetration = (self.size + target.size) - Game::normalize(self.pos - target.pos).len();
+        let penetration = penetration.min(min(self.size, target.size));
         if penetration > 0.0 {
             let prev_mass = self.mass();
             self.size = (self.size - penetration).max(0.0);
@@ -82,6 +84,7 @@ impl Entity {
     }
     fn consume(&mut self, target: &mut Self, k: f32) {
         let penetration = (self.size + target.size) - Game::normalize(self.pos - target.pos).len();
+        let penetration = penetration.min(min(self.size, target.size));
         if penetration > 0.0 {
             let prev_mass = target.mass();
             target.size = (target.size - penetration).max(0.0);
