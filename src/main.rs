@@ -582,7 +582,10 @@ impl geng::App for Game {
 }
 
 fn main() {
-    let context = Rc::new(geng::Context::new(default()));
+    let context = Rc::new(geng::Context::new(geng::ContextOptions {
+        title: "LifeShot".to_owned(),
+        ..default()
+    }));
     let game = Game::new(&context);
     geng::run(context, game);
 }
