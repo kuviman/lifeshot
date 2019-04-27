@@ -22,6 +22,7 @@ struct Game {
     projectiles: Vec<Entity>,
     food: Vec<Entity>,
     next_food: f32,
+    camera_pos: Vec2<f32>,
     quad_geometry: ugli::VertexBuffer<QuadVertex>,
     particle_instances: ugli::VertexBuffer<ParticleInstance>,
     particle_program: ugli::Program,
@@ -252,6 +253,8 @@ impl Controller for EmptyController {
 }
 
 impl Game {
+    const CAMERA_FOV: f32 = 10.0;
+
     const MAX_FOOD: usize = 10;
     const FOOD_K: f32 = 5.0;
     const FOOD_SIZE: Range<f32> = 0.1..0.3;
@@ -319,6 +322,7 @@ impl Game {
                 .compile(include_str!("particle.glsl"))
                 .unwrap(),
             mouse_pos,
+            camera_pos: vec2(0.0, 0.0),
         }
     }
 }
@@ -385,10 +389,16 @@ impl geng::App for Game {
         self.food.retain(|e| e.size > 0.0);
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
+        for player in &self.players {
+            if player.owner_id == Some(1) {
+                self.camera_pos = player.pos;
+            }
+        }
         let framebuffer_size = framebuffer.get_size().map(|x| x as f32);
         ugli::clear(framebuffer, Some(Color::BLACK), None);
         let view_matrix = Mat4::scale(vec3(framebuffer_size.y / framebuffer_size.x, 1.0, 1.0))
-            * Mat4::scale_uniform(1.0 / 10.0);
+            * Mat4::scale_uniform(1.0 / Self::CAMERA_FOV)
+            * Mat4::translate(-self.camera_pos.extend(0.0));
         self.mouse_pos.set({
             let mouse_pos = self.context.window().mouse_pos().map(|x| x as f32);
             let mouse_pos = vec2(
