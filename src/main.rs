@@ -112,6 +112,7 @@ trait Controller {
 
 struct Player {
     entity: Entity,
+    team_id: usize,
     controller: RefCell<Box<dyn Controller>>,
     projectile: Option<Entity>,
     action: Cell<Action>,
@@ -126,7 +127,12 @@ impl Player {
     const PROJECTILE_MASS_GAIN_SPEED: f32 = 0.3;
     const PROJECTILE_COST_SPEED: f32 = 0.1;
 
-    fn new<T: Controller + 'static>(pos: Vec2<f32>, color: Color<f32>, controller: T) -> Self {
+    fn new<T: Controller + 'static>(
+        pos: Vec2<f32>,
+        color: Color<f32>,
+        controller: T,
+        team_id: usize,
+    ) -> Self {
         static NEXT_ID: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
         Self {
             entity: Entity {
@@ -136,6 +142,7 @@ impl Player {
                 vel: vec2(0.0, 0.0),
                 size: Self::INITIAL_SIZE,
             },
+            team_id,
             controller: RefCell::new(Box::new(controller)),
             projectile: None,
             action: Cell::new(default()),
@@ -290,16 +297,24 @@ impl Game {
         v
     }
 
+    fn reset(&mut self) {
+        self.players = vec![Player::new(
+            vec2(0.0, 0.0),
+            Color::WHITE,
+            KeyboardController::new(&self.context, &self.mouse_pos),
+            0,
+        )];
+        self.food = Vec::new();
+        self.next_food = 0.0;
+        self.projectiles = Vec::new();
+        self.next_wave_timer = 0.0;
+        self.next_wave = 1;
+    }
+
     fn new(context: &Rc<geng::Context>) -> Self {
-        let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
-        let keyboard_controller = KeyboardController::new(context, &mouse_pos);
-        Self {
+        let mut game = Self {
             context: context.clone(),
-            players: vec![Player::new(
-                vec2(0.0, 0.0),
-                Color::WHITE,
-                keyboard_controller,
-            )],
+            players: Vec::new(),
             food: Vec::new(),
             next_food: 0.0,
             projectiles: Vec::new(),
@@ -325,11 +340,13 @@ impl Game {
                 .shader_lib()
                 .compile(include_str!("particle.glsl"))
                 .unwrap(),
-            mouse_pos,
+            mouse_pos: Rc::new(Cell::new(vec2(0.0, 0.0))),
             camera_pos: vec2(0.0, 0.0),
             next_wave_timer: 0.0,
             next_wave: 1,
-        }
+        };
+        game.reset();
+        game
     }
 
     fn spawn_enemy(&mut self) {
@@ -340,6 +357,7 @@ impl Game {
             ),
             Color::RED,
             BotController,
+            1,
         ));
     }
 }
@@ -507,6 +525,9 @@ impl geng::App for Game {
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
+            geng::Event::KeyDown { key: geng::Key::R } => {
+                self.reset();
+            }
             _ => {}
         }
     }

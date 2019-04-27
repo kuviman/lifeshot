@@ -23,7 +23,7 @@ impl Controller for BotController {
         let closest_enemy = game
             .players
             .iter()
-            .filter(|player| player.owner_id.unwrap() == 1) // TODO: this is hardcode for player
+            .filter(|player| player.team_id != me.team_id)
             .min_by(|a, b| {
                 Game::delta_pos(me.pos, a.pos)
                     .len()
