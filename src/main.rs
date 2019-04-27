@@ -491,6 +491,19 @@ impl geng::App for Game {
                 );
             }
         }
+        self.context.default_font().draw(
+            framebuffer,
+            &format!(
+                "ENEMIES: {}",
+                self.players
+                    .iter()
+                    .filter(|p| p.owner_id.unwrap() != 1)
+                    .count()
+            ),
+            vec2(0.0, 0.0),
+            32.0,
+            Color::WHITE,
+        );
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
