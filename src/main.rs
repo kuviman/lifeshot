@@ -295,7 +295,7 @@ impl Game {
     const WORLD_SIZE: f32 = 50.0;
 
     const PROJECTILE_DEATH_SPEED: f32 = 0.1;
-    const PROJECTILE_STRENGTH: f32 = 2.0;
+    const PROJECTILE_STRENGTH: f32 = 1.0;
     const PLAYER_DEATH_SPEED: f32 = 1.0 / 20.0;
 
     fn delta_pos(a: Vec2<f32>, b: Vec2<f32>) -> Vec2<f32> {
