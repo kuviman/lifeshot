@@ -16,6 +16,8 @@ struct Game {
     context: Rc<geng::Context>,
     players: Vec<Player>,
     projectiles: Vec<Entity>,
+    food: Vec<Entity>,
+    next_food: f32,
     quad_geometry: ugli::VertexBuffer<QuadVertex>,
     particle_instances: ugli::VertexBuffer<ParticleInstance>,
     particle_program: ugli::Program,
@@ -68,6 +70,15 @@ impl Entity {
             self.size = (self.size - penetration).max(0.0);
             let delta_mass = prev_mass - self.mass();
             target.add_mass(-delta_mass);
+        }
+    }
+    fn consume(&mut self, target: &mut Self) {
+        let penetration = (self.size + target.size) - (self.pos - target.pos).len();
+        if penetration > 0.0 {
+            let prev_mass = target.mass();
+            target.size = (target.size - penetration).max(0.0);
+            let delta_mass = prev_mass - target.mass();
+            self.add_mass(delta_mass);
         }
     }
 }
@@ -224,6 +235,10 @@ impl Controller for EmptyController {
 }
 
 impl Game {
+    const MAX_FOOD: usize = 50;
+    const FOOD_SIZE: Range<f32> = 0.1..0.3;
+    const FOOD_SPAWN: Range<f32> = 0.5..1.0;
+
     fn new(context: &Rc<geng::Context>) -> Self {
         let mouse_pos = Rc::new(Cell::new(vec2(0.0, 0.0)));
         let keyboard_controller = KeyboardController::new(context, &mouse_pos);
@@ -233,6 +248,8 @@ impl Game {
                 Player::new(vec2(0.0, 0.0), Color::WHITE, keyboard_controller),
                 Player::new(vec2(10.0, 0.0), Color::RED, EmptyController),
             ],
+            food: Vec::new(),
+            next_food: 0.0,
             projectiles: Vec::new(),
             quad_geometry: ugli::VertexBuffer::new_static(
                 context.ugli_context(),
@@ -287,6 +304,30 @@ impl geng::App for Game {
                 }
             }
         }
+        self.next_food -= delta_time;
+        while self.next_food < 0.0 {
+            self.next_food += global_rng().gen_range(Self::FOOD_SPAWN.start, Self::FOOD_SPAWN.end);
+            if self.food.len() < Self::MAX_FOOD {
+                self.food.push(Entity {
+                    owner_id: None,
+                    color: Color::GREEN,
+                    pos: vec2(
+                        global_rng().gen_range(-10.0, 10.0),
+                        global_rng().gen_range(-10.0, 10.0),
+                    ),
+                    vel: vec2(0.0, 0.0),
+                    size: global_rng().gen_range(Self::FOOD_SIZE.start, Self::FOOD_SIZE.end),
+                });
+            }
+        }
+        for f in &mut self.food {
+            f.update(delta_time);
+        }
+        for f in &mut self.food {
+            for player in &mut self.players {
+                player.consume(f);
+            }
+        }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
         let framebuffer_size = framebuffer.get_size().map(|x| x as f32);
@@ -306,6 +347,9 @@ impl geng::App for Game {
         {
             let particles: &mut Vec<_> = &mut self.particle_instances;
             particles.clear();
+            for f in &self.food {
+                f.draw(particles);
+            }
             for player in &self.players {
                 player.draw(particles);
             }
