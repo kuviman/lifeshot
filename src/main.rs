@@ -459,7 +459,7 @@ impl geng::App for Game {
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
         for player in &self.players {
-            if player.owner_id == Some(1) {
+            if player.team_id == 0 {
                 self.camera_pos = player.pos;
             }
         }
