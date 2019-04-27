@@ -287,7 +287,7 @@ impl Game {
 
     const MAX_FOOD: usize = 100;
     const FOOD_K: f32 = 3.0;
-    const FOOD_SIZE: Range<f32> = 0.1..0.3;
+    const FOOD_SIZE: Range<f32> = 0.1..0.5;
     const FOOD_SPAWN: Range<f32> = 0.05..0.1;
 
     const TIME_BETWEEN_WAVES: f32 = 120.0;
@@ -296,7 +296,7 @@ impl Game {
 
     const PROJECTILE_DEATH_SPEED: f32 = 0.1;
     const PROJECTILE_STRENGTH: f32 = 2.0;
-    const PLAYER_DEATH_SPEED: f32 = 1.0 / 60.0;
+    const PLAYER_DEATH_SPEED: f32 = 1.0 / 20.0;
 
     fn delta_pos(a: Vec2<f32>, b: Vec2<f32>) -> Vec2<f32> {
         let dv = b - a;
