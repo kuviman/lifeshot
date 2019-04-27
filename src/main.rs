@@ -216,6 +216,7 @@ impl geng::App for Game {
                 self.projectiles.push(e);
             }
         }
+        self.players.retain(|e| e.size > 0.0);
         for e in &mut self.projectiles {
             e.pos += e.vel * delta_time;
         }
