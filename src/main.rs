@@ -460,13 +460,7 @@ impl geng::App for Game {
         }
         self.food.retain(|e| e.size > 0.0);
 
-        if self
-            .players
-            .iter()
-            .filter(|p| p.owner_id.unwrap() != 1)
-            .count()
-            == 0
-        {
+        if self.players.iter().filter(|p| p.team_id != 0).count() == 0 {
             self.next_wave_timer = self.next_wave_timer.min(10.0);
         }
         self.next_wave_timer -= delta_time;
@@ -545,9 +539,11 @@ impl geng::App for Game {
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
-            geng::Event::KeyDown { key: geng::Key::R } => {
-                self.reset();
-            }
+            geng::Event::KeyDown { key } => match key {
+                geng::Key::R => self.reset(),
+                geng::Key::F => self.context.window().toggle_fullscreen(),
+                _ => {}
+            },
             _ => {}
         }
     }
