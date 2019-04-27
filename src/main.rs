@@ -30,12 +30,12 @@ struct Entity {
 }
 
 impl Entity {
-    fn draw(&self) -> ParticleInstance {
-        ParticleInstance {
+    fn draw(&self, buffer: &mut Vec<ParticleInstance>) {
+        buffer.push(ParticleInstance {
             i_pos: self.pos,
             i_size: self.size,
             i_color: self.color,
-        }
+        });
     }
     fn add_mass(&mut self, delta: f32) {
         let mass = self.size * self.size + delta;
@@ -114,6 +114,13 @@ impl Player {
             None
         } else {
             self.projectile.take()
+        }
+    }
+
+    fn draw(&self, particles: &mut Vec<ParticleInstance>) {
+        self.entity.draw(particles);
+        if let Some(e) = self.projectile.as_ref() {
+            e.draw(particles);
         }
     }
 }
@@ -246,10 +253,10 @@ impl geng::App for Game {
             let particles: &mut Vec<_> = &mut self.particle_instances;
             particles.clear();
             for player in &self.players {
-                particles.push(player.draw());
+                player.draw(particles);
             }
             for e in &self.projectiles {
-                particles.push(e.draw());
+                e.draw(particles);
             }
         }
         ugli::draw(
