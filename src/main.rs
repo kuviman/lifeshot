@@ -81,14 +81,14 @@ impl Entity {
             b.pos += n * penetration * kb;
         }
     }
-    fn hit(&mut self, target: &mut Self) {
+    fn hit(&mut self, target: &mut Self, k: f32) {
         let penetration = (self.size + target.size) - Game::normalize(self.pos - target.pos).len();
         let penetration = penetration.min(min(self.size, target.size));
         if penetration > 0.0 {
-            let prev_mass = self.mass();
-            self.size = (self.size - penetration).max(0.0);
-            let delta_mass = prev_mass - self.mass();
-            target.add_mass(-delta_mass);
+            let prev_mass = target.mass();
+            target.size = (target.size - penetration).max(0.0);
+            let delta_mass = prev_mass - target.mass();
+            self.add_mass(-delta_mass / k);
         }
     }
     fn consume(&mut self, target: &mut Self, k: f32) {
@@ -295,6 +295,7 @@ impl Game {
     const WORLD_SIZE: f32 = 50.0;
 
     const PROJECTILE_DEATH_SPEED: f32 = 0.2;
+    const PROJECTILE_STRENGTH: f32 = 2.0;
     const PLAYER_DEATH_SPEED: f32 = 1.0 / 60.0;
 
     fn delta_pos(a: Vec2<f32>, b: Vec2<f32>) -> Vec2<f32> {
@@ -420,7 +421,7 @@ impl geng::App for Game {
         for e in &mut self.projectiles {
             for player in &mut self.players {
                 if e.owner_id != player.owner_id {
-                    e.hit(player);
+                    e.hit(player, Self::PROJECTILE_STRENGTH);
                 }
             }
         }
@@ -428,7 +429,7 @@ impl geng::App for Game {
             let (head, tail) = self.projectiles.split_at_mut(i);
             let cur = &mut tail[0];
             for prev in head {
-                cur.hit(prev);
+                cur.hit(prev, 1.0);
             }
         }
         self.next_food -= delta_time;
