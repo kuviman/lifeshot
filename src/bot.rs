@@ -3,8 +3,8 @@ use crate::*;
 pub struct BotController;
 
 impl BotController {
-    const SHOT_SIZE: f32 = 0.2;
-    const MIN_SIZE: f32 = 0.4;
+    const SHOT_HIT_SIZE: f32 = 0.3;
+    const MIN_SIZE: f32 = 0.7;
 }
 
 impl Controller for BotController {
@@ -32,14 +32,26 @@ impl Controller for BotController {
             });
         Action {
             target_vel: closest_food.map(|f| f.pos).unwrap_or(vec2(0.0, 0.0)) - me.pos,
-            shoot: if me.size < Self::MIN_SIZE {
-                None
-            } else {
-                match me.projectile {
-                    Some(ref p) if p.size > Self::SHOT_SIZE => None,
-                    _ => closest_enemy.map(|e| e.pos),
+            shoot: closest_enemy.and_then(|e| match me.projectile {
+                Some(ref p) => {
+                    if p.size
+                        - Game::PROJECTILE_DEATH_SPEED * (e.pos - p.pos).len()
+                            / Player::PROJECTILE_SPEED
+                        > Self::SHOT_HIT_SIZE
+                    {
+                        None
+                    } else {
+                        Some(e.pos)
+                    }
                 }
-            },
+                _ => {
+                    if me.size < Self::MIN_SIZE {
+                        None
+                    } else {
+                        Some(e.pos)
+                    }
+                }
+            }),
         }
     }
 }
