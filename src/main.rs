@@ -37,12 +37,28 @@ impl Entity {
             i_color: self.color,
         });
     }
+    fn mass(&self) -> f32 {
+        self.size * self.size
+    }
     fn add_mass(&mut self, delta: f32) {
         let mass = self.size * self.size + delta;
         self.size = mass.max(0.0).sqrt();
     }
     fn update(&mut self, delta_time: f32) {
         self.pos += self.vel * delta_time;
+    }
+    fn collide(a: &mut Self, b: &mut Self) {
+        let penetration = (a.size + b.size) - (a.pos - b.pos).len();
+        let n = (b.pos - a.pos).normalize();
+        if penetration > 0.0 {
+            let ka = 1.0 / a.mass();
+            let kb = 1.0 / b.mass();
+            let sum_k = ka + kb;
+            let ka = ka / sum_k;
+            let kb = kb / sum_k;
+            a.pos -= n * penetration * ka;
+            b.pos += n * penetration * kb;
+        }
     }
 }
 
@@ -243,6 +259,13 @@ impl geng::App for Game {
         self.players.retain(|e| e.size > 0.0);
         for e in &mut self.projectiles {
             e.update(delta_time);
+        }
+        for i in 0..self.players.len() {
+            let (head, tail) = self.players.split_at_mut(i);
+            let cur = &mut tail[0];
+            for prev in head {
+                Entity::collide(prev, cur);
+            }
         }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
