@@ -338,6 +338,15 @@ impl geng::App for Game {
             if let Some(e) = player.update(delta_time) {
                 self.projectiles.push(e);
             }
+            if player.size <= 0.0 {
+                self.food.push(Entity {
+                    owner_id: None,
+                    color: Color::GREEN,
+                    pos: player.pos,
+                    vel: vec2(0.0, 0.0),
+                    size: Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
+                });
+            }
         }
         self.players.retain(|e| e.size > 0.0);
         for e in &mut self.projectiles {
