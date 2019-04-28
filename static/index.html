@@ -13,16 +13,19 @@
         }
 
         body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
+            padding: 1em 0;
+        }
+
+        ul {
+            list-style-type: disc;
+            margin-top: 0.5em;
         }
 
         #game-container {
             position: relative;
             width: 50%;
             padding-top: 37.5%;
-            margin: auto;
+            margin: 1em auto;
         }
 
         #game-inner-container {
@@ -234,11 +237,9 @@
             </svg></a></div>
     <!-- GitLab corner END -->
 
-    <div style="margin:2em;">
-        <h1>LifeShot</h1>
-        <h3>by kuviman</h3>
-        <p>for <a href="https://ldjam.com/events/ludum-dare/44">Ludum Dare 44</a></p>
-    </div>
+    <h1>LifeShot</h1>
+    <h3>by kuviman</h3>
+    <p>for <a href="https://ldjam.com/events/ludum-dare/44">Ludum Dare 44</a></p>
     <div id="game-container">
         <div id="game-inner-container">
             <div id="error-screen" style="display: none;">
@@ -250,6 +251,12 @@
             <canvas id="geng-canvas"></canvas>
         </div>
     </div>
+    <h2>Native builds</h2>
+    <b>Warning</b> &mdash; sounds are not working in native builds yet :(
+    <ul>
+        <li><a href="lifeshot.exe">Windows (64-bit)</a></li>
+        <li>For other platforms, you can build from <a href="https://gitlab.com/kuviman/lifeshot">source</a></li>
+    </ul>
     <script src="lifeshot.js"></script>
 </body>
 
