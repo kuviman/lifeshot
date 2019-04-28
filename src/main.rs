@@ -16,21 +16,49 @@ use projectile::*;
 
 static mut CAMERA_POS: Vec2<f32> = Vec2 { x: 0.0, y: 0.0 };
 
-fn play_sound(name: &str, pos: Vec2<f32>) {
-    let volume = clamp(
-        1.0 - (Game::delta_pos(pos, unsafe { CAMERA_POS }).len() / Game::CAMERA_FOV / 2.0)
-            .powf(2.0),
-        0.0..=1.0,
-    );
+struct Sound {
     #[cfg(target_arch = "wasm32")]
-    {
+    inner: stdweb::Reference,
+}
+
+impl Sound {
+    fn set_pos(&self, pos: Vec2<f32>) {
+        let volume = clamp(
+            1.0 - (Game::delta_pos(pos, unsafe { CAMERA_POS }).len() / Game::CAMERA_FOV / 2.0)
+                .powf(2.0),
+            0.0..=1.0,
+        );
+        #[cfg(target_arch = "wasm32")]
         js! {
             @(no_return)
-            var audio = new Audio(@{name});
-            audio.volume = @{volume} * 0.2;
-            audio.play();
+            @{&self.inner}.volume = @{volume} * 0.2;
         }
     }
+    fn stop(&self) {
+        js! {
+            @(no_return)
+            @{&self.inner}.pause();
+        }
+    }
+}
+
+fn play_sound(name: &str, pos: Vec2<f32>) -> Sound {
+    #[cfg(target_arch = "wasm32")]
+    {
+        use stdweb::unstable::TryInto;
+        let inner = js! {
+            var audio = new Audio(@{name});
+            audio.play();
+            return audio;
+        }
+        .try_into()
+        .unwrap();
+        let result = Sound { inner };
+        result.set_pos(pos);
+        result
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    Sound {}
 }
 
 fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {

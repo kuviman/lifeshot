@@ -14,6 +14,7 @@ pub struct Player {
     pub projectile: Option<Projectile>,
     pub action: Cell<Action>,
     time: f32,
+    aim_sound: Option<Sound>,
 }
 
 pub trait Controller {
@@ -78,6 +79,7 @@ impl Player {
             projectile: None,
             action: Cell::new(default()),
             time: 0.0,
+            aim_sound: None,
         }
     }
     pub fn update(&mut self, delta_time: f32) -> Option<Projectile> {
@@ -95,6 +97,11 @@ impl Player {
             e.update(delta_time);
         }
         if let Some(target) = action.shoot {
+            if let Some(ref sound) = self.aim_sound {
+                sound.set_pos(self.pos);
+            } else {
+                self.aim_sound = Some(play_sound("aim.wav", self.pos));
+            }
             if self.projectile.is_none() {
                 self.projectile = Some(Projectile::new(
                     self.owner_id,
@@ -110,6 +117,10 @@ impl Player {
             e.add_mass(-Self::PROJECTILE_COST_SPEED * delta_time);
             None
         } else {
+            if let Some(ref sound) = self.aim_sound {
+                sound.stop();
+            }
+            self.aim_sound = None;
             let result = self.projectile.take();
             if let Some(ref e) = result {
                 play_sound("shoot.wav", e.pos);
