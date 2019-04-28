@@ -217,6 +217,7 @@ impl geng::App for Game {
                     player.pos,
                     Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
                 ));
+                play_sound("death.wav", player.pos);
             }
         }
         self.players.retain(|e| e.size > 0.0);
