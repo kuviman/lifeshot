@@ -20,10 +20,10 @@ impl DerefMut for Food {
 }
 
 impl Food {
-    const PREFERRED_SIZE: f32 = 0.1;
+    const PREFERRED_MASS: f32 = 0.02;
     const COLOR_OFF: f32 = 0.3;
     pub fn new(pos: Vec2<f32>, size: f32) -> Self {
-        let part_count = f32::ceil(size / Self::PREFERRED_SIZE) as usize;
+        let part_count = f32::ceil(size * size / Self::PREFERRED_MASS) as usize;
         Self {
             entity: Entity {
                 owner_id: None,
@@ -45,7 +45,7 @@ impl Food {
                             ),
                             pos: pos,
                             vel: vec2(0.0, 0.0),
-                            size: size / part_count as f32,
+                            size: size / (part_count as f32).sqrt(),
                         },
                     )
                 })
