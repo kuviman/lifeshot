@@ -27,7 +27,7 @@ fn play_sound(name: &str, pos: Vec2<f32>) {
         js! {
             @(no_return)
             var audio = new Audio(@{name});
-            audio.volume = @{volume};
+            audio.volume = @{volume} * 0.2;
             audio.play();
         }
     }
@@ -490,6 +490,7 @@ fn check_music_start() {
         js! {
             @(no_return)
             var music = new Audio("music.ogg");
+            music.volume = 0.2;
             music.addEventListener("ended", function () {
                 this.currentTime = 0;
                 this.play();
