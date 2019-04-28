@@ -6,3 +6,6 @@ edition = "2018"
 
 [dependencies]
 geng = { git = "https://gitlab.com/kuviman/geng" }
+
+[target.wasm32-unknown-unknown.dependencies]
+stdweb = "0.4.9"

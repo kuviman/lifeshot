@@ -8,6 +8,7 @@ pub use keyboard::*;
 
 pub struct Player {
     entity: Entity,
+    prev_size: f32,
     pub team_id: usize,
     pub controller: RefCell<Box<dyn Controller>>,
     pub projectile: Option<Projectile>,
@@ -71,6 +72,7 @@ impl Player {
                 vel: vec2(0.0, 0.0),
                 size: Self::INITIAL_SIZE,
             },
+            prev_size: Self::INITIAL_SIZE,
             team_id,
             controller: RefCell::new(Box::new(controller)),
             projectile: None,
@@ -79,6 +81,7 @@ impl Player {
         }
     }
     pub fn update(&mut self, delta_time: f32) -> Option<Projectile> {
+        self.prev_size = self.size;
         self.time += delta_time;
         let mut action = self.action.get();
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
@@ -107,7 +110,11 @@ impl Player {
             e.add_mass(-Self::PROJECTILE_COST_SPEED * delta_time);
             None
         } else {
-            self.projectile.take()
+            let result = self.projectile.take();
+            if result.is_some() {
+                play_sound("shoot.wav");
+            }
+            result
         }
     }
 

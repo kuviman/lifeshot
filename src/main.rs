@@ -1,3 +1,7 @@
+#[cfg(target_arch = "wasm32")]
+#[macro_use]
+extern crate stdweb;
+
 use geng::prelude::*;
 
 mod entity;
@@ -9,6 +13,17 @@ use entity::*;
 use food::*;
 use player::*;
 use projectile::*;
+
+fn play_sound(name: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        js! {
+            @(no_return)
+            var audio = new Audio(@{name});
+            audio.play();
+        }
+    }
+}
 
 fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
     Color::rgba(
@@ -212,7 +227,9 @@ impl geng::App for Game {
         for e in &mut self.projectiles {
             for player in &mut self.players {
                 if e.owner_id != player.owner_id {
-                    e.hit(player, Self::PROJECTILE_STRENGTH);
+                    if e.hit(player, Self::PROJECTILE_STRENGTH) {
+                        e.actually_hit = true;
+                    }
                 }
             }
         }
@@ -244,6 +261,9 @@ impl geng::App for Game {
         for f in &mut self.food {
             for player in &mut self.players {
                 player.consume(f, Self::FOOD_K);
+            }
+            if f.size <= 0.0 {
+                play_sound("heal.wav");
             }
         }
         self.food.retain(|e| e.size > 0.0);

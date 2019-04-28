@@ -4,6 +4,8 @@ pub struct Projectile {
     entity: Entity,
     sparks: Vec<(f32, Entity)>,
     next_spark: f32,
+    prev_alive: Cell<bool>,
+    pub actually_hit: bool,
 }
 
 impl Deref for Projectile {
@@ -35,11 +37,20 @@ impl Projectile {
             },
             sparks: Vec::new(),
             next_spark: 0.0,
+            prev_alive: Cell::new(true),
+            actually_hit: false,
         }
     }
 
     pub fn alive(&self) -> bool {
-        self.size > 0.0 || !self.sparks.is_empty()
+        let alive = self.size > 0.0;
+        if alive != self.prev_alive.get() {
+            if self.actually_hit {
+                play_sound("hit.wav");
+            }
+            self.prev_alive.set(alive);
+        }
+        alive || !self.sparks.is_empty()
     }
 
     pub fn update(&mut self, delta_time: f32) {

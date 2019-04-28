@@ -41,7 +41,7 @@ impl Entity {
             b.pos += n * penetration * kb;
         }
     }
-    pub fn hit(&mut self, target: &mut Self, k: f32) {
+    pub fn hit(&mut self, target: &mut Self, k: f32) -> bool {
         let penetration = (self.size + target.size) - Game::normalize(self.pos - target.pos).len();
         let penetration = penetration.min(min(self.size, target.size));
         if penetration > 0.0 {
@@ -49,6 +49,9 @@ impl Entity {
             target.size = (target.size - penetration).max(0.0);
             let delta_mass = prev_mass - target.mass();
             self.add_mass(-delta_mass / k);
+            true
+        } else {
+            false
         }
     }
     pub fn consume(&mut self, target: &mut Self, k: f32) {

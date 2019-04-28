@@ -848,6 +848,7 @@ name = "lifeshot"
 version = "0.1.0"
 dependencies = [
  "geng 0.1.0 (git+https://gitlab.com/kuviman/geng)",
+ "stdweb 0.4.16 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
