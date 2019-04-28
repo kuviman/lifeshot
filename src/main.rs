@@ -274,14 +274,6 @@ impl Controller for KeyboardController {
     }
 }
 
-struct EmptyController;
-
-impl Controller for EmptyController {
-    fn act(&mut self, _: usize, _: &Game) -> Action {
-        default()
-    }
-}
-
 impl Game {
     const CAMERA_FOV: f32 = 15.0;
 
