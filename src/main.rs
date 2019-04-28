@@ -104,6 +104,7 @@ pub struct Game {
     quad_geometry: ugli::VertexBuffer<QuadVertex>,
     particle_instances: ugli::VertexBuffer<ParticleInstance>,
     particle_program: ugli::Program,
+    background_particles: Vec<Entity>,
     mouse_pos: Rc<Cell<Vec2<f32>>>,
     next_wave_timer: f32,
     next_wave: usize,
@@ -195,6 +196,30 @@ impl Game {
                     },
                 ],
             ),
+            background_particles: {
+                let mut ps = Vec::new();
+                for _ in 0..10 {
+                    ps.push(Entity {
+                        owner_id: None,
+                        color: Color::rgba(
+                            global_rng().gen_range(0.0, 1.0),
+                            global_rng().gen_range(0.0, 1.0),
+                            global_rng().gen_range(0.0, 1.0),
+                            0.02,
+                        ),
+                        pos: vec2(
+                            global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                            global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                        ),
+                        vel: vec2(
+                            global_rng().gen_range(-1.0, 1.0),
+                            global_rng().gen_range(-1.0, 1.0),
+                        ),
+                        size: global_rng().gen_range(Self::CAMERA_FOV, Self::CAMERA_FOV * 2.0),
+                    })
+                }
+                ps
+            },
             particle_instances: ugli::VertexBuffer::new_dynamic(context.ugli_context(), Vec::new()),
             particle_program: context
                 .shader_lib()
@@ -247,6 +272,11 @@ impl geng::App for Game {
             }
         }
         let delta_time = delta_time as f32;
+
+        for p in &mut self.background_particles {
+            p.update(delta_time);
+        }
+
         for player in &mut self.players {
             if self.start > Self::START {
                 player.size -= Self::PLAYER_DEATH_SPEED * delta_time;
@@ -373,6 +403,10 @@ impl geng::App for Game {
         {
             let particles: &mut Vec<_> = &mut self.particle_instances;
             particles.clear();
+
+            for p in &self.background_particles {
+                p.draw(particles);
+            }
 
             if player_alive {
                 let dv =
