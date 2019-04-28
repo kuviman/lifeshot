@@ -12,6 +12,7 @@ pub struct Player {
     pub controller: RefCell<Box<dyn Controller>>,
     pub projectile: Option<Projectile>,
     pub action: Cell<Action>,
+    time: f32,
 }
 
 pub trait Controller {
@@ -74,9 +75,11 @@ impl Player {
             controller: RefCell::new(Box::new(controller)),
             projectile: None,
             action: Cell::new(default()),
+            time: 0.0,
         }
     }
     pub fn update(&mut self, delta_time: f32) -> Option<Projectile> {
+        self.time += delta_time;
         let mut action = self.action.get();
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
         if action.shoot.is_some() {
@@ -122,6 +125,13 @@ impl Player {
             i_size: self.size * 0.9,
             i_color: self.color,
         });
+        particles.push(ParticleInstance {
+            i_pos: self.pos,
+            i_size: self.size * 0.9 * {
+                ((self.time * 10.0).sin() * 0.5 + 0.5).powf(3.0) * 0.5 + 0.5
+            },
+            i_color: Color::rgba(1.0, 1.0, 1.0, 0.1),
+        })
     }
 
     pub fn act(&self, game: &Game) {
