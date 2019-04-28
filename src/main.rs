@@ -43,6 +43,7 @@ pub struct ParticleInstance {
 
 pub struct Game {
     context: Rc<geng::Context>,
+    font: geng::Font,
     players: Vec<Player>,
     projectiles: Vec<Projectile>,
     food: Vec<Food>,
@@ -146,6 +147,11 @@ impl Game {
             next_wave_timer: 0.0,
             next_wave: 1,
             start: 0.0,
+            font: geng::Font::new(
+                context,
+                include_bytes!("../font/Simply Rounded Bold.ttf").to_vec(),
+            )
+            .unwrap(),
         };
         game.reset();
         game
@@ -345,7 +351,7 @@ impl geng::App for Game {
         }
 
         if !player_alive {
-            let font = self.context.default_font();
+            let font = &self.font;
             let scale = framebuffer_size.y / 20.0;
             let mid = framebuffer_size / 2.0;
             font.draw_aligned(
@@ -366,7 +372,7 @@ impl geng::App for Game {
             );
         } else if self.start < Self::START {
             let alpha = 1.0 - self.start / Self::START;
-            let font = self.context.default_font();
+            let font = &self.font;
             let scale = framebuffer_size.y / 20.0;
             let mid = framebuffer_size / 2.0;
             font.draw_aligned(
@@ -402,7 +408,7 @@ impl geng::App for Game {
                 Color::rgba(0.5, 0.5, 0.5, alpha),
             );
         } else {
-            let font = self.context.default_font();
+            let font = &self.font;
             let scale = framebuffer_size.y / 20.0;
             let mid = framebuffer_size / 2.0;
             font.draw_aligned(
