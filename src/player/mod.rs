@@ -146,7 +146,7 @@ impl Player {
         particles.push(ParticleInstance {
             i_pos: self.pos,
             i_size: self.size * 0.9 * {
-                ((self.time * 15.0).sin() * 0.5 + 0.5).powf(3.0) * 0.5 + 0.5
+                ((self.time * 5.0).sin() * 0.5 + 0.5).powf(3.0) * 0.5 + 0.5
             },
             i_color: Color::rgba(1.0, 1.0, 1.0, 0.1),
         })
