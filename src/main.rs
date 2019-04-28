@@ -150,15 +150,21 @@ impl Game {
     }
 
     fn spawn_enemy(&mut self) {
-        self.players.push(Player::new(
-            vec2(
-                global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-            ),
-            Color::RED,
-            BotController,
-            1,
-        ));
+        loop {
+            let enemy = Player::new(
+                vec2(
+                    global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                    global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                ),
+                Color::RED,
+                BotController,
+                1,
+            );
+            if Self::delta_pos(self.camera_pos, enemy.pos).len() > Self::CAMERA_FOV {
+                self.players.push(enemy);
+                break;
+            }
+        }
     }
 }
 
