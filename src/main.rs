@@ -17,6 +17,16 @@ fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
     )
 }
 
+fn random_circle_point() -> Vec2<f32> {
+    let mut rng = global_rng();
+    loop {
+        let result = vec2(rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0));
+        if result.len() < 1.0 {
+            return result;
+        }
+    }
+}
+
 #[derive(ugli::Vertex)]
 struct QuadVertex {
     a_pos: Vec2<f32>,
