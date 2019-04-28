@@ -160,3 +160,11 @@ impl Player {
         );
     }
 }
+
+impl Drop for Player {
+    fn drop(&mut self) {
+        if let Some(ref sound) = self.aim_sound {
+            sound.stop();
+        }
+    }
+}
