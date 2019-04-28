@@ -3,10 +3,12 @@ use geng::prelude::*;
 mod entity;
 mod food;
 mod player;
+mod projectile;
 
 use entity::*;
 use food::*;
 use player::*;
+use projectile::*;
 
 fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
     Color::rgba(
@@ -42,7 +44,7 @@ pub struct ParticleInstance {
 pub struct Game {
     context: Rc<geng::Context>,
     players: Vec<Player>,
-    projectiles: Vec<Entity>,
+    projectiles: Vec<Projectile>,
     food: Vec<Food>,
     next_food: f32,
     camera_pos: Vec2<f32>,

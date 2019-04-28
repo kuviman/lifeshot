@@ -10,7 +10,7 @@ pub struct Player {
     entity: Entity,
     pub team_id: usize,
     pub controller: RefCell<Box<dyn Controller>>,
-    pub projectile: Option<Entity>,
+    pub projectile: Option<Projectile>,
     pub action: Cell<Action>,
 }
 
@@ -76,7 +76,7 @@ impl Player {
             action: Cell::new(default()),
         }
     }
-    pub fn update(&mut self, delta_time: f32) -> Option<Entity> {
+    pub fn update(&mut self, delta_time: f32) -> Option<Projectile> {
         let mut action = self.action.get();
         action.target_vel = action.target_vel.clamp(1.0) * Self::MAX_SPEED;
         if action.shoot.is_some() {
@@ -87,13 +87,10 @@ impl Player {
         self.entity.update(delta_time);
         if let Some(target) = action.shoot {
             if self.projectile.is_none() {
-                self.projectile = Some(Entity {
-                    owner_id: self.owner_id,
-                    color: mix(self.color, Color::WHITE),
-                    size: 0.0,
-                    pos: vec2(0.0, 0.0),
-                    vel: vec2(0.0, 0.0),
-                })
+                self.projectile = Some(Projectile::new(
+                    self.owner_id,
+                    mix(self.color, Color::WHITE),
+                ));
             }
             let projectile = self.projectile.as_mut().unwrap();
             let e = &mut self.entity;
