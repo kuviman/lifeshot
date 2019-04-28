@@ -54,10 +54,12 @@ pub struct Game {
     mouse_pos: Rc<Cell<Vec2<f32>>>,
     next_wave_timer: f32,
     next_wave: usize,
+    start: f32,
 }
 
 impl Game {
     const CAMERA_FOV: f32 = 15.0;
+    const START: f32 = 5.0;
 
     const MAX_FOOD: usize = 100;
     const FOOD_K: f32 = 3.0;
@@ -105,6 +107,7 @@ impl Game {
         self.projectiles = Vec::new();
         self.next_wave_timer = 0.0;
         self.next_wave = 1;
+        self.start = 0.0;
     }
 
     fn new(context: &Rc<geng::Context>) -> Self {
@@ -140,6 +143,7 @@ impl Game {
             camera_pos: vec2(0.0, 0.0),
             next_wave_timer: 0.0,
             next_wave: 1,
+            start: 0.0,
         };
         game.reset();
         game
@@ -231,13 +235,15 @@ impl geng::App for Game {
         if self.players.iter().filter(|p| p.team_id != 0).count() == 0 {
             self.next_wave_timer = self.next_wave_timer.min(10.0);
         }
-        self.next_wave_timer -= delta_time;
-        if self.next_wave_timer < 0.0 {
-            self.next_wave_timer = Self::TIME_BETWEEN_WAVES;
-            for _ in 0..self.next_wave {
-                self.spawn_enemy();
+        if self.start > Self::START {
+            self.next_wave_timer -= delta_time;
+            if self.next_wave_timer < 0.0 {
+                self.next_wave_timer = Self::TIME_BETWEEN_WAVES;
+                for _ in 0..self.next_wave {
+                    self.spawn_enemy();
+                }
+                self.next_wave += 1;
             }
-            self.next_wave += 1;
         }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
@@ -246,10 +252,12 @@ impl geng::App for Game {
             if player.team_id == 0 {
                 player_alive = true;
                 self.camera_pos = player.pos;
+                self.start = self.start.max(player.pos.len());
             }
         }
         let framebuffer_size = framebuffer.get_size().map(|x| x as f32);
         ugli::clear(framebuffer, Some(Color::BLACK), None);
+
         let view_matrix = Mat4::scale(vec3(framebuffer_size.y / framebuffer_size.x, 1.0, 1.0))
             * Mat4::scale_uniform(1.0 / Self::CAMERA_FOV)
             * Mat4::translate(-self.camera_pos.extend(0.0));
@@ -324,6 +332,65 @@ impl geng::App for Game {
                     },
                 );
             }
+        }
+
+        if !player_alive {
+            let font = self.context.default_font();
+            let scale = framebuffer_size.y / 20.0;
+            let mid = framebuffer_size / 2.0;
+            font.draw_aligned(
+                framebuffer,
+                "YOU DED",
+                vec2(0.0, 2.0 * scale) + mid,
+                0.5,
+                scale * 2.0,
+                Color::rgba(0.5, 0.5, 0.5, 1.0),
+            );
+            font.draw_aligned(
+                framebuffer,
+                "press R to restart",
+                vec2(0.0, -4.0 * scale) + mid,
+                0.5,
+                scale * 2.0,
+                Color::rgba(0.5, 0.5, 0.5, 1.0),
+            );
+        } else if self.start < Self::START {
+            let alpha = 1.0 - self.start / Self::START;
+            let font = self.context.default_font();
+            let scale = framebuffer_size.y / 20.0;
+            let mid = framebuffer_size / 2.0;
+            font.draw_aligned(
+                framebuffer,
+                "WASD to move",
+                vec2(0.0, 5.0 * scale) + mid,
+                0.5,
+                scale * 2.0,
+                Color::rgba(0.5, 0.5, 0.5, alpha),
+            );
+            font.draw_aligned(
+                framebuffer,
+                "LMB to shoot",
+                vec2(0.0, 3.0 * scale) + mid,
+                0.5,
+                scale * 2.0,
+                Color::rgba(0.5, 0.5, 0.5, alpha),
+            );
+            font.draw_aligned(
+                framebuffer,
+                "F to toggle fullscreen",
+                vec2(0.0, 2.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(0.5, 0.5, 0.5, alpha),
+            );
+            font.draw_aligned(
+                framebuffer,
+                "Survive as long as possible",
+                vec2(0.0, -3.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(0.5, 0.5, 0.5, alpha),
+            );
         }
 
         self.context.default_font().draw(
