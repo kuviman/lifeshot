@@ -241,8 +241,10 @@ impl geng::App for Game {
         }
     }
     fn draw(&mut self, framebuffer: &mut ugli::Framebuffer) {
+        let mut player_alive = false;
         for player in &self.players {
             if player.team_id == 0 {
+                player_alive = true;
                 self.camera_pos = player.pos;
             }
         }
@@ -265,14 +267,14 @@ impl geng::App for Game {
             let particles: &mut Vec<_> = &mut self.particle_instances;
             particles.clear();
 
-            {
+            if player_alive {
                 let dv =
                     (self.mouse_pos.get() - self.camera_pos).normalize() * Self::CAMERA_FOV * 2.0;
-                const N: usize = 20;
+                const N: usize = 40;
                 for i in 1..=N {
                     particles.push(ParticleInstance {
                         i_pos: self.camera_pos + dv * i as f32 / N as f32,
-                        i_color: Color::rgba(0.5, 0.5, 1.0, 0.2),
+                        i_color: Color::rgba(0.5, 0.5, 1.0, 0.4),
                         i_size: 0.1,
                     });
                 }
