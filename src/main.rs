@@ -96,7 +96,7 @@ impl Game {
     fn reset(&mut self) {
         self.players = vec![Player::new(
             vec2(0.0, 0.0),
-            Color::BLUE,
+            Color::rgb(0.5, 0.5, 1.0),
             KeyboardController::new(&self.context, &self.mouse_pos),
             0,
         )];
