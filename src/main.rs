@@ -469,6 +469,9 @@ impl geng::App for Game {
         }
     }
     fn handle_event(&mut self, event: geng::Event) {
+        if let geng::Event::KeyDown { .. } | geng::Event::MouseDown { .. } = event {
+            check_music_start();
+        }
         match event {
             geng::Event::KeyDown { key } => match key {
                 geng::Key::R => self.reset(),
@@ -476,6 +479,22 @@ impl geng::App for Game {
                 _ => {}
             },
             _ => {}
+        }
+    }
+}
+
+fn check_music_start() {
+    static STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if !STARTED.fetch_or(true, std::sync::atomic::Ordering::Relaxed) {
+        #[cfg(target_arch = "wasm32")]
+        js! {
+            @(no_return)
+            var music = new Audio("music.ogg");
+            music.addEventListener("ended", function () {
+                this.currentTime = 0;
+                this.play();
+            }, false);
+            music.play();
         }
     }
 }
