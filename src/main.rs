@@ -70,6 +70,8 @@ impl Game {
 
     const WORLD_SIZE: f32 = 50.0;
 
+    const WAVE_PAUSE: f32 = 10.0;
+
     const PROJECTILE_DEATH_SPEED: f32 = 0.1;
     const PROJECTILE_STRENGTH: f32 = 0.5;
     const PLAYER_DEATH_SPEED: f32 = 1.0 / 20.0;
@@ -105,7 +107,7 @@ impl Game {
         self.food = Vec::new();
         self.next_food = 0.0;
         self.projectiles = Vec::new();
-        self.next_wave_timer = 0.0;
+        self.next_wave_timer = Self::WAVE_PAUSE;
         self.next_wave = 1;
         self.start = 0.0;
     }
@@ -241,7 +243,7 @@ impl geng::App for Game {
         self.food.retain(|e| e.size > 0.0);
 
         if self.players.iter().filter(|p| p.team_id != 0).count() == 0 {
-            self.next_wave_timer = self.next_wave_timer.min(10.0);
+            self.next_wave_timer = self.next_wave_timer.min(Self::WAVE_PAUSE);
         }
         if self.start > Self::START {
             self.next_wave_timer -= delta_time;
@@ -399,20 +401,34 @@ impl geng::App for Game {
                 scale,
                 Color::rgba(0.5, 0.5, 0.5, alpha),
             );
+        } else {
+            let font = self.context.default_font();
+            let scale = framebuffer_size.y / 20.0;
+            let mid = framebuffer_size / 2.0;
+            font.draw_aligned(
+                framebuffer,
+                &format!(
+                    "wave #{} in {} secs",
+                    self.next_wave,
+                    f32::floor(self.next_wave_timer),
+                ),
+                vec2(0.0, 8.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(1.0, 1.0, 1.0, 0.5),
+            );
+            font.draw_aligned(
+                framebuffer,
+                &format!(
+                    "{} enemies",
+                    self.players.iter().filter(|p| p.team_id != 0).count(),
+                ),
+                vec2(0.0, -9.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(1.0, 1.0, 1.0, 0.5),
+            );
         }
-
-        self.context.default_font().draw(
-            framebuffer,
-            &format!(
-                "ENEMIES: {}, wave #{} in {} secs",
-                self.players.iter().filter(|p| p.team_id != 0).count(),
-                self.next_wave,
-                f32::floor(self.next_wave_timer / 2.0),
-            ),
-            vec2(32.0, 32.0),
-            32.0,
-            Color::WHITE,
-        );
     }
     fn handle_event(&mut self, event: geng::Event) {
         match event {
