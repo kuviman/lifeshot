@@ -1,9 +1,11 @@
 use geng::prelude::*;
 
 mod entity;
+mod food;
 mod player;
 
 use entity::*;
+use food::*;
 use player::*;
 
 fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
@@ -31,7 +33,7 @@ pub struct Game {
     context: Rc<geng::Context>,
     players: Vec<Player>,
     projectiles: Vec<Entity>,
-    food: Vec<Entity>,
+    food: Vec<Food>,
     next_food: f32,
     camera_pos: Vec2<f32>,
     quad_geometry: ugli::VertexBuffer<QuadVertex>,
@@ -156,13 +158,10 @@ impl geng::App for Game {
                 self.projectiles.push(e);
             }
             if player.size <= 0.0 {
-                self.food.push(Entity {
-                    owner_id: None,
-                    color: Color::GREEN,
-                    pos: player.pos,
-                    vel: vec2(0.0, 0.0),
-                    size: Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
-                });
+                self.food.push(Food::new(
+                    player.pos,
+                    Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
+                ));
             }
         }
         self.players.retain(|e| e.size > 0.0);
@@ -196,18 +195,15 @@ impl geng::App for Game {
         while self.next_food < 0.0 {
             self.next_food += global_rng().gen_range(Self::FOOD_SPAWN.start, Self::FOOD_SPAWN.end);
             if self.food.len() < Self::MAX_FOOD {
-                self.food.push(Entity {
-                    owner_id: None,
-                    color: Color::GREEN,
-                    pos: vec2(
+                self.food.push(Food::new(
+                    vec2(
                         global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
                         global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
                     ),
-                    vel: vec2(0.0, 0.0),
-                    size: Self::FOOD_SIZE.start
+                    Self::FOOD_SIZE.start
                         + global_rng().gen_range::<f32>(0.0, 1.0).powf(4.0)
                             * (Self::FOOD_SIZE.end - Self::FOOD_SIZE.start),
-                });
+                ));
             }
         }
         for f in &mut self.food {
