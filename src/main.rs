@@ -78,6 +78,9 @@ pub struct Game {
     mouse_pos: Rc<Cell<Vec2<f32>>>,
     next_wave_timer: f32,
     next_wave: usize,
+    time_played: f32,
+    kills: usize,
+    waves_finished: usize,
     start: f32,
 }
 
@@ -134,6 +137,9 @@ impl Game {
         self.next_wave_timer = Self::WAVE_PAUSE;
         self.next_wave = 1;
         self.start = 0.0;
+        self.kills = 0;
+        self.waves_finished = 0;
+        self.time_played = 0.0;
     }
 
     fn new(context: &Rc<geng::Context>) -> Self {
@@ -175,6 +181,9 @@ impl Game {
                 include_bytes!("../font/Simply Rounded Bold.ttf").to_vec(),
             )
             .unwrap(),
+            waves_finished: 0,
+            kills: 0,
+            time_played: 0.0,
         };
         game.reset();
         game
@@ -201,8 +210,12 @@ impl Game {
 
 impl geng::App for Game {
     fn update(&mut self, delta_time: f64) {
+        let mut player_alive = false;
         for player in &self.players {
             player.act(self);
+            if player.team_id == 0 {
+                player_alive = true;
+            }
         }
         let delta_time = delta_time as f32;
         for player in &mut self.players {
@@ -218,6 +231,9 @@ impl geng::App for Game {
                     Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
                 ));
                 play_sound("death.wav", player.pos);
+                if player.team_id != 0 && player_alive {
+                    self.kills += 1;
+                }
             }
         }
         self.players.retain(|e| e.size > 0.0);
@@ -287,7 +303,13 @@ impl geng::App for Game {
                 for _ in 0..self.next_wave {
                     self.spawn_enemy();
                 }
+                if player_alive {
+                    self.waves_finished = self.next_wave.max(1) - 1;
+                }
                 self.next_wave += 1;
+            }
+            if player_alive {
+                self.time_played += delta_time;
             }
         }
     }
@@ -389,9 +411,33 @@ impl geng::App for Game {
             font.draw_aligned(
                 framebuffer,
                 "YOU DED",
-                vec2(0.0, 2.0 * scale) + mid,
+                vec2(0.0, 4.0 * scale) + mid,
                 0.5,
                 scale * 2.0,
+                Color::rgba(0.5, 0.5, 0.5, 1.0),
+            );
+            font.draw_aligned(
+                framebuffer,
+                &format!("time played: {} secs", self.time_played as i64),
+                vec2(0.0, 3.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(0.5, 0.5, 0.5, 1.0),
+            );
+            font.draw_aligned(
+                framebuffer,
+                &format!("waves finished: {}", self.waves_finished),
+                vec2(0.0, 2.0 * scale) + mid,
+                0.5,
+                scale,
+                Color::rgba(0.5, 0.5, 0.5, 1.0),
+            );
+            font.draw_aligned(
+                framebuffer,
+                &format!("enemies killed: {}", self.kills),
+                vec2(0.0, 1.0 * scale) + mid,
+                0.5,
+                scale,
                 Color::rgba(0.5, 0.5, 0.5, 1.0),
             );
             font.draw_aligned(
