@@ -191,7 +191,7 @@ impl Game {
                 BotController,
                 1,
             );
-            if Self::delta_pos(self.camera_pos, enemy.pos).len() > Self::CAMERA_FOV {
+            if Self::delta_pos(self.camera_pos, enemy.pos).len() > Self::CAMERA_FOV * 2.0 {
                 self.players.push(enemy);
                 break;
             }
