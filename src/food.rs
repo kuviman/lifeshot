@@ -21,6 +21,7 @@ impl DerefMut for Food {
 
 impl Food {
     const PREFERRED_SIZE: f32 = 0.1;
+    const COLOR_OFF: f32 = 0.3;
     pub fn new(pos: Vec2<f32>, size: f32) -> Self {
         let part_count = f32::ceil(size / Self::PREFERRED_SIZE) as usize;
         Self {
@@ -37,7 +38,11 @@ impl Food {
                         random_circle_point(),
                         Entity {
                             owner_id: None,
-                            color: Color::GREEN,
+                            color: Color::rgb(
+                                global_rng().gen_range(0.0, Self::COLOR_OFF),
+                                global_rng().gen_range(1.0 - Self::COLOR_OFF, 1.0),
+                                global_rng().gen_range(0.0, Self::COLOR_OFF),
+                            ),
                             pos: pos,
                             vel: vec2(0.0, 0.0),
                             size: size / part_count as f32,
@@ -59,6 +64,11 @@ impl Food {
 
     pub fn draw(&self, particles: &mut Vec<ParticleInstance>) {
         for &(_, ref part) in &self.parts {
+            particles.push(ParticleInstance {
+                i_pos: part.pos,
+                i_color: mix(Color::BLACK, part.color),
+                i_size: part.size * 1.1,
+            });
             part.draw(particles);
         }
     }
