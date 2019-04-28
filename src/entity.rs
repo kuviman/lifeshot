@@ -45,10 +45,13 @@ impl Entity {
         let penetration = (self.size + target.size) - Game::normalize(self.pos - target.pos).len();
         let penetration = penetration.min(min(self.size, target.size));
         if penetration > 0.0 {
-            let prev_mass = target.mass();
-            target.size = (target.size - penetration).max(0.0);
-            let delta_mass = prev_mass - target.mass();
-            self.add_mass(-delta_mass / k);
+            let prev_mass = self.mass();
+            self.size = (self.size - penetration).max(0.0);
+            let delta_mass = prev_mass - self.mass();
+            let prev_target_mass = target.mass();
+            target.add_mass(-delta_mass * k);
+            let real_delta_mass = (prev_target_mass - target.mass()) / k;
+            self.add_mass(delta_mass - real_delta_mass);
             true
         } else {
             false
