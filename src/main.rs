@@ -181,7 +181,7 @@ impl geng::App for Game {
             e.size -= Self::PROJECTILE_DEATH_SPEED * delta_time;
             e.update(delta_time);
         }
-        self.projectiles.retain(|e| e.size > 0.0);
+        self.projectiles.retain(|e| e.alive());
         for i in 0..self.players.len() {
             let (head, tail) = self.players.split_at_mut(i);
             let cur = &mut tail[0];

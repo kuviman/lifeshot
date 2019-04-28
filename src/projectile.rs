@@ -38,6 +38,10 @@ impl Projectile {
         }
     }
 
+    pub fn alive(&self) -> bool {
+        self.size > 0.0 || !self.sparks.is_empty()
+    }
+
     pub fn update(&mut self, delta_time: f32) {
         self.entity.update(delta_time);
         self.next_spark -= delta_time * self.mass();
