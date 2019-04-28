@@ -46,7 +46,7 @@ impl Projectile {
         let alive = self.size > 0.0;
         if alive != self.prev_alive.get() {
             if self.actually_hit {
-                play_sound("hit.wav");
+                play_sound("hit.wav", self.pos);
             }
             self.prev_alive.set(alive);
         }

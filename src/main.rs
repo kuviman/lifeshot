@@ -14,12 +14,20 @@ use food::*;
 use player::*;
 use projectile::*;
 
-fn play_sound(name: &str) {
+static mut CAMERA_POS: Vec2<f32> = Vec2 { x: 0.0, y: 0.0 };
+
+fn play_sound(name: &str, pos: Vec2<f32>) {
+    let volume = clamp(
+        1.0 - (Game::delta_pos(pos, unsafe { CAMERA_POS }).len() / Game::CAMERA_FOV / 2.0)
+            .powf(2.0),
+        0.0..=1.0,
+    );
     #[cfg(target_arch = "wasm32")]
     {
         js! {
             @(no_return)
             var audio = new Audio(@{name});
+            audio.volume = @{volume};
             audio.play();
         }
     }
@@ -263,7 +271,7 @@ impl geng::App for Game {
                 player.consume(f, Self::FOOD_K);
             }
             if f.size <= 0.0 {
-                play_sound("heal.wav");
+                play_sound("heal.wav", f.pos);
             }
         }
         self.food.retain(|e| e.size > 0.0);
@@ -288,6 +296,9 @@ impl geng::App for Game {
             if player.team_id == 0 {
                 player_alive = true;
                 self.camera_pos = player.pos;
+                unsafe {
+                    CAMERA_POS = self.camera_pos;
+                }
                 self.start = self.start.max(player.pos.len());
             }
         }

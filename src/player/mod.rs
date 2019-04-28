@@ -111,8 +111,8 @@ impl Player {
             None
         } else {
             let result = self.projectile.take();
-            if result.is_some() {
-                play_sound("shoot.wav");
+            if let Some(ref e) = result {
+                play_sound("shoot.wav", e.pos);
             }
             result
         }
