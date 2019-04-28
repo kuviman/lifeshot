@@ -45,7 +45,7 @@ impl Projectile {
     pub fn update(&mut self, delta_time: f32) {
         self.entity.update(delta_time);
         self.next_spark -= delta_time * self.mass();
-        while self.next_spark < 0.0 {
+        while self.next_spark < 0.0 && self.size > 0.0 {
             self.next_spark += 1.0 / Self::SPARK_FREQ;
             self.sparks.push((
                 0.0,
@@ -54,14 +54,14 @@ impl Projectile {
                     color: mix(Color::WHITE, self.entity.color),
                     pos: self.entity.pos,
                     vel: random_circle_point() * Self::SPARK_MAX_SPEED,
-                    size: self.entity.size / 2.0,
+                    size: global_rng().gen_range(self.entity.size / 2.0, self.entity.size),
                 },
             ))
         }
         for &mut (ref mut t, ref mut e) in &mut self.sparks {
             *t += delta_time;
             e.update(delta_time);
-            e.color.a = 1.0 - *t / Self::SPARK_LIFE;
+            e.color.a = (1.0 - *t / Self::SPARK_LIFE) * 0.5;
         }
         self.sparks.retain(|&(t, _)| t < Self::SPARK_LIFE);
     }
