@@ -85,6 +85,9 @@ impl Player {
         let delta_vel = action.target_vel - self.vel;
         self.vel += delta_vel.clamp(Self::ACCELERATION * delta_time);
         self.entity.update(delta_time);
+        if let Some(e) = self.projectile.as_mut() {
+            e.update(delta_time);
+        }
         if let Some(target) = action.shoot {
             if self.projectile.is_none() {
                 self.projectile = Some(Projectile::new(
