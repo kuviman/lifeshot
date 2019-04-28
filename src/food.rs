@@ -52,7 +52,8 @@ impl Food {
     pub fn update(&mut self, delta_time: f32) {
         self.time = (self.time + delta_time * 3.0).min(1.0);
         for &mut (pos, ref mut part) in &mut self.parts {
-            part.pos = self.entity.pos + self.entity.size * pos * self.time;
+            part.pos =
+                self.entity.pos + self.entity.size * pos * (1.0 - (1.0 - self.time).powf(2.0));
         }
     }
 
