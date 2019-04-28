@@ -35,6 +35,7 @@ impl Sound {
         }
     }
     fn stop(&self) {
+        #[cfg(target_arch = "wasm32")]
         js! {
             @(no_return)
             @{&self.inner}.pause();
