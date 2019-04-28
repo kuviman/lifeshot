@@ -296,7 +296,7 @@ impl geng::App for Game {
                     let max_x = max_y * framebuffer_size.x / framebuffer_size.y;
                     if dv.x.abs() > max_x || dv.y.abs() > max_y {
                         let mut color = player.color;
-                        color.a = 0.2;
+                        color.a = 0.5;
                         particles.push(ParticleInstance {
                             i_pos: self.camera_pos
                                 + vec2(clamp_abs(dv.x, max_x), clamp_abs(dv.y, max_y)),
