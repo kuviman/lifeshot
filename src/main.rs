@@ -48,13 +48,11 @@ impl Sound {
 fn play_sound(name: &str, pos: Vec2<f32>) -> Sound {
     #[cfg(target_arch = "wasm32")]
     {
-        use stdweb::unstable::TryInto;
-        let inner = js! {
+        let inner = stdweb::unstable::TryInto::try_into(js! {
             var audio = new Audio(@{name});
             audio.play();
             return audio;
-        }
-        .try_into()
+        })
         .unwrap();
         let result = Sound { inner };
         result.set_pos(pos);
