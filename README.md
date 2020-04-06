@@ -6,7 +6,7 @@ In this game you are to survive waves of enemies. You can shoot them, but each s
 
 ## Play
 
-For web version of this game, visit https://kuviman.gitlab.io/lifeshot/.
+For web version of this game, visit https://kuviman.github.io/lifeshot/.
 
 It is also possible to build a native version from source.
 
