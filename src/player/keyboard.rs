@@ -1,12 +1,12 @@
 use crate::*;
 
 pub struct KeyboardController {
-    context: Rc<geng::Context>,
+    context: Rc<Geng>,
     mouse_pos: Rc<Cell<Vec2<f32>>>,
 }
 
 impl KeyboardController {
-    pub fn new(context: &Rc<geng::Context>, mouse_pos: &Rc<Cell<Vec2<f32>>>) -> Self {
+    pub fn new(context: &Rc<Geng>, mouse_pos: &Rc<Cell<Vec2<f32>>>) -> Self {
         Self {
             context: context.clone(),
             mouse_pos: mouse_pos.clone(),

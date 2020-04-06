@@ -96,7 +96,7 @@ pub struct ParticleInstance {
 }
 
 pub struct Game {
-    context: Rc<geng::Context>,
+    context: Rc<Geng>,
     font: geng::Font,
     players: Vec<Player>,
     projectiles: Vec<Projectile>,
@@ -174,7 +174,7 @@ impl Game {
         self.time_played = 0.0;
     }
 
-    fn new(context: &Rc<geng::Context>) -> Self {
+    fn new(context: &Rc<Geng>) -> Self {
         let mut game = Self {
             context: context.clone(),
             players: Vec::new(),
@@ -182,7 +182,7 @@ impl Game {
             next_food: 0.0,
             projectiles: Vec::new(),
             quad_geometry: ugli::VertexBuffer::new_static(
-                context.ugli_context(),
+                context.ugli(),
                 vec![
                     QuadVertex {
                         a_pos: vec2(-1.0, -1.0),
@@ -222,7 +222,7 @@ impl Game {
                 }
                 ps
             },
-            particle_instances: ugli::VertexBuffer::new_dynamic(context.ugli_context(), Vec::new()),
+            particle_instances: ugli::VertexBuffer::new_dynamic(context.ugli(), Vec::new()),
             particle_program: context
                 .shader_lib()
                 .compile(include_str!("particle.glsl"))
@@ -264,7 +264,7 @@ impl Game {
     }
 }
 
-impl geng::App for Game {
+impl geng::State for Game {
     fn update(&mut self, delta_time: f64) {
         let mut player_alive = false;
         for player in &self.players {
@@ -336,7 +336,7 @@ impl geng::App for Game {
                         global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
                     ),
                     Self::FOOD_SIZE.start
-                        + global_rng().gen_range::<f32>(0.0, 1.0).powf(4.0)
+                        + global_rng().gen_range(0.0f32, 1.0f32).powf(4.0)
                             * (Self::FOOD_SIZE.end - Self::FOOD_SIZE.start),
                 ));
             }
@@ -386,7 +386,7 @@ impl geng::App for Game {
                 self.start = self.start.max(player.pos.len());
             }
         }
-        let framebuffer_size = framebuffer.get_size().map(|x| x as f32);
+        let framebuffer_size = framebuffer.size().map(|x| x as f32);
         ugli::clear(framebuffer, Some(Color::BLACK), None);
 
         let view_matrix = Mat4::scale(vec3(framebuffer_size.y / framebuffer_size.x, 1.0, 1.0))
@@ -612,7 +612,7 @@ fn check_music_start() {
 }
 
 fn main() {
-    let context = Rc::new(geng::Context::new(geng::ContextOptions {
+    let context = Rc::new(Geng::new(geng::ContextOptions {
         title: "LifeShot".to_owned(),
         ..default()
     }));
