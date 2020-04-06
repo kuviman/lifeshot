@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           cp -r static artifacts
-          rm artifacts/*.html artifacts/*.ttf
+          rm artifacts/*.html
           if [ "${{ runner.os }} " == "Windows" ]; then
             EXT=.exe
           fi
