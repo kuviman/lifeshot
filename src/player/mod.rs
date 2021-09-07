@@ -82,7 +82,7 @@ impl Player {
             aim_sound: None,
         }
     }
-    pub fn update(&mut self, delta_time: f32) -> Option<Projectile> {
+    pub fn update(&mut self, assets: &Assets, delta_time: f32) -> Option<Projectile> {
         self.prev_size = self.size;
         self.time += delta_time;
         let mut action = self.action.get();
@@ -100,7 +100,7 @@ impl Player {
             if let Some(ref sound) = self.aim_sound {
                 sound.set_pos(self.pos);
             } else {
-                self.aim_sound = Some(play_sound("aim.wav", self.pos));
+                self.aim_sound = Some(play_sound(&assets.aim, self.pos));
             }
             if self.projectile.is_none() {
                 self.projectile = Some(Projectile::new(
@@ -123,7 +123,7 @@ impl Player {
             self.aim_sound = None;
             let result = self.projectile.take();
             if let Some(ref e) = result {
-                play_sound("shoot.wav", e.pos);
+                play_sound(&assets.shoot, e.pos);
             }
             result
         }

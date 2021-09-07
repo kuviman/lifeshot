@@ -1,8 +1,4 @@
-#![windows_subsystem = "windows"]
-
-#[cfg(target_arch = "wasm32")]
-#[macro_use]
-extern crate stdweb;
+// #![windows_subsystem = "windows"]
 
 use geng::prelude::*;
 
@@ -19,8 +15,7 @@ use projectile::*;
 static mut CAMERA_POS: Vec2<f32> = Vec2 { x: 0.0, y: 0.0 };
 
 struct Sound {
-    #[cfg(target_arch = "wasm32")]
-    inner: stdweb::Reference,
+    inner: RefCell<geng::SoundEffect>,
 }
 
 impl Sound {
@@ -30,36 +25,19 @@ impl Sound {
                 .powf(2.0),
             0.0..=1.0,
         );
-        #[cfg(target_arch = "wasm32")]
-        js! {
-            @(no_return)
-            @{&self.inner}.volume = @{volume} * 0.2;
-        }
+        self.inner.borrow_mut().set_volume(volume as f64 * 0.2);
     }
     fn stop(&self) {
-        #[cfg(target_arch = "wasm32")]
-        js! {
-            @(no_return)
-            @{&self.inner}.pause();
-        }
+        self.inner.borrow_mut().pause();
     }
 }
 
-fn play_sound(name: &str, pos: Vec2<f32>) -> Sound {
-    #[cfg(target_arch = "wasm32")]
-    {
-        let inner = stdweb::unstable::TryInto::try_into(js! {
-            var audio = new Audio(@{name});
-            audio.play();
-            return audio;
-        })
-        .unwrap();
-        let result = Sound { inner };
-        result.set_pos(pos);
-        result
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    Sound {}
+fn play_sound(sound: &geng::Sound, pos: Vec2<f32>) -> Sound {
+    let sound = Sound {
+        inner: RefCell::new(sound.play()),
+    };
+    sound.set_pos(pos);
+    sound
 }
 
 fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
@@ -74,7 +52,7 @@ fn mix(a: Color<f32>, b: Color<f32>) -> Color<f32> {
 fn random_circle_point() -> Vec2<f32> {
     let mut rng = global_rng();
     loop {
-        let result = vec2(rng.gen_range(-1.0, 1.0), rng.gen_range(-1.0, 1.0));
+        let result = vec2(rng.gen_range(-1.0..=1.0), rng.gen_range(-1.0..=1.0));
         if result.len() < 1.0 {
             return result;
         }
@@ -93,7 +71,19 @@ pub struct ParticleInstance {
     i_color: Color<f32>,
 }
 
+#[derive(geng::Assets)]
+struct Assets {
+    aim: geng::Sound,
+    death: geng::Sound,
+    heal: geng::Sound,
+    hit: geng::Sound,
+    #[asset(path = "music.ogg")]
+    music: geng::Sound,
+    shoot: geng::Sound,
+}
+
 pub struct Game {
+    assets: Assets,
     context: Rc<Geng>,
     font: geng::Font,
     players: Vec<Player>,
@@ -172,8 +162,10 @@ impl Game {
         self.time_played = 0.0;
     }
 
-    fn new(context: &Rc<Geng>) -> Self {
+    fn new(context: &Rc<Geng>, mut assets: Assets) -> Self {
+        assets.music.looped = true;
         let mut game = Self {
+            assets,
             context: context.clone(),
             players: Vec::new(),
             food: Vec::new(),
@@ -202,20 +194,20 @@ impl Game {
                     ps.push(Entity {
                         owner_id: None,
                         color: Color::rgba(
-                            global_rng().gen_range(0.0, 1.0),
-                            global_rng().gen_range(0.0, 1.0),
-                            global_rng().gen_range(0.0, 1.0),
+                            global_rng().gen_range(0.0..=1.0),
+                            global_rng().gen_range(0.0..=1.0),
+                            global_rng().gen_range(0.0..=1.0),
                             0.02,
                         ),
                         pos: vec2(
-                            global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                            global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                            global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
+                            global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
                         ),
                         vel: vec2(
-                            global_rng().gen_range(-1.0, 1.0),
-                            global_rng().gen_range(-1.0, 1.0),
+                            global_rng().gen_range(-1.0..=1.0),
+                            global_rng().gen_range(-1.0..=1.0),
                         ),
-                        size: global_rng().gen_range(Self::CAMERA_FOV, Self::CAMERA_FOV * 2.0),
+                        size: global_rng().gen_range(Self::CAMERA_FOV..=Self::CAMERA_FOV * 2.0),
                     })
                 }
                 ps
@@ -247,8 +239,8 @@ impl Game {
         loop {
             let enemy = Player::new(
                 vec2(
-                    global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                    global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                    global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
+                    global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
                 ),
                 Color::RED,
                 BotController,
@@ -281,7 +273,7 @@ impl geng::State for Game {
             if self.start > Self::START {
                 player.size -= Self::PLAYER_DEATH_SPEED * delta_time;
             }
-            if let Some(e) = player.update(delta_time) {
+            if let Some(e) = player.update(&self.assets, delta_time) {
                 self.projectiles.push(e);
             }
             if player.size <= 0.0 {
@@ -289,7 +281,7 @@ impl geng::State for Game {
                     player.pos,
                     Player::INITIAL_SIZE / Self::FOOD_K.sqrt(),
                 ));
-                play_sound("death.wav", player.pos);
+                play_sound(&self.assets.death, player.pos);
                 if player.team_id != 0 && player_alive {
                     self.kills += 1;
                 }
@@ -300,7 +292,8 @@ impl geng::State for Game {
             e.size -= Self::PROJECTILE_DEATH_SPEED * delta_time;
             e.update(delta_time);
         }
-        self.projectiles.retain(|e| e.alive());
+        let assets = &self.assets;
+        self.projectiles.retain(|e| e.alive(assets));
         for i in 0..self.players.len() {
             let (head, tail) = self.players.split_at_mut(i);
             let cur = &mut tail[0];
@@ -326,15 +319,15 @@ impl geng::State for Game {
         }
         self.next_food -= delta_time;
         while self.next_food < 0.0 {
-            self.next_food += global_rng().gen_range(Self::FOOD_SPAWN.start, Self::FOOD_SPAWN.end);
+            self.next_food += global_rng().gen_range(Self::FOOD_SPAWN.start..=Self::FOOD_SPAWN.end);
             if self.food.len() < Self::MAX_FOOD {
                 self.food.push(Food::new(
                     vec2(
-                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
-                        global_rng().gen_range(-Self::WORLD_SIZE, Self::WORLD_SIZE),
+                        global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
+                        global_rng().gen_range(-Self::WORLD_SIZE..=Self::WORLD_SIZE),
                     ),
                     Self::FOOD_SIZE.start
-                        + global_rng().gen_range(0.0f32, 1.0f32).powf(4.0)
+                        + global_rng().gen_range(0.0f32..=1.0f32).powf(4.0)
                             * (Self::FOOD_SIZE.end - Self::FOOD_SIZE.start),
                 ));
             }
@@ -347,7 +340,7 @@ impl geng::State for Game {
                 player.consume(f, Self::FOOD_K);
             }
             if f.size <= 0.0 {
-                play_sound("heal.wav", f.pos);
+                play_sound(&self.assets.heal, f.pos);
             }
         }
         self.food.retain(|e| e.size > 0.0);
@@ -579,7 +572,7 @@ impl geng::State for Game {
     }
     fn handle_event(&mut self, event: geng::Event) {
         if let geng::Event::KeyDown { .. } | geng::Event::MouseDown { .. } = event {
-            check_music_start();
+            check_music_start(&self.assets);
         }
         match event {
             geng::Event::KeyDown { key } => match key {
@@ -592,28 +585,32 @@ impl geng::State for Game {
     }
 }
 
-fn check_music_start() {
+fn check_music_start(assets: &Assets) {
     static STARTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !STARTED.fetch_or(true, std::sync::atomic::Ordering::Relaxed) {
-        #[cfg(target_arch = "wasm32")]
-        js! {
-            @(no_return)
-            var music = new Audio("music.ogg");
-            music.volume = 0.2;
-            music.addEventListener("ended", function () {
-                this.currentTime = 0;
-                this.play();
-            }, false);
-            music.play();
-        }
+        let mut music = assets.music.play();
+        music.set_volume(0.2);
     }
 }
 
 fn main() {
-    let context = Rc::new(Geng::new(geng::ContextOptions {
+    if let Ok(dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        std::env::set_current_dir(std::path::Path::new(&dir).join("static")).unwrap();
+    }
+    logger::init().unwrap();
+    geng::setup_panic_handler();
+    let geng = Rc::new(Geng::new(geng::ContextOptions {
         title: "LifeShot".to_owned(),
         ..default()
     }));
-    let game = Game::new(&context);
-    geng::run(context, game);
+    let geng_clone = geng.clone();
+    geng::run(
+        geng.clone(),
+        geng::LoadingScreen::new(
+            &geng,
+            geng::EmptyLoadingScreen,
+            geng::LoadAsset::load(&geng, "."),
+            move |assets| Game::new(&geng_clone, assets.unwrap()),
+        ),
+    );
 }

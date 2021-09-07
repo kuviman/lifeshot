@@ -42,11 +42,11 @@ impl Projectile {
         }
     }
 
-    pub fn alive(&self) -> bool {
+    pub fn alive(&self, assets: &Assets) -> bool {
         let alive = self.size > 0.0;
         if alive != self.prev_alive.get() {
             if self.actually_hit {
-                play_sound("hit.wav", self.pos);
+                play_sound(&assets.hit, self.pos);
             }
             self.prev_alive.set(alive);
         }
@@ -65,7 +65,7 @@ impl Projectile {
                     color: mix(Color::WHITE, self.entity.color),
                     pos: self.entity.pos,
                     vel: random_circle_point() * Self::SPARK_MAX_SPEED,
-                    size: global_rng().gen_range(self.entity.size / 2.0, self.entity.size),
+                    size: global_rng().gen_range(self.entity.size / 2.0..=self.entity.size),
                 },
             ))
         }

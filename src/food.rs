@@ -39,9 +39,9 @@ impl Food {
                         Entity {
                             owner_id: None,
                             color: Color::rgb(
-                                global_rng().gen_range(0.0, Self::COLOR_OFF),
-                                global_rng().gen_range(1.0 - Self::COLOR_OFF, 1.0),
-                                global_rng().gen_range(0.0, Self::COLOR_OFF),
+                                global_rng().gen_range(0.0..=Self::COLOR_OFF),
+                                global_rng().gen_range(1.0 - Self::COLOR_OFF..=1.0),
+                                global_rng().gen_range(0.0..=Self::COLOR_OFF),
                             ),
                             pos: pos,
                             vel: vec2(0.0, 0.0),
